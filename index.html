@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <meta name="theme-color" content="#0a0a0f" />
-<title>Synthesia Clone — Waterfall Piano</title>
+<title>NeoKeys</title>
 <!-- Tone.js (for piano sound synthesis) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 <!-- @tonejs/midi (MIDI file parser) -->
@@ -260,34 +260,53 @@
   .tbtn.play { background: linear-gradient(135deg, var(--accent), #5a3dff); }
   .tbtn.play.paused { background: linear-gradient(135deg, var(--good), #2ab864); }
 
-  /* ---------- Wait-for-note indicator ---------- */
+  /* ---------- Wait-for-note indicator (hidden — labels now render on the falling blocks) ---------- */
   .wait-banner {
-    position: absolute;
-    top: 60px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(20, 22, 40, 0.92);
-    border: 1px solid var(--accent);
-    color: var(--text);
-    padding: 10px 18px;
-    border-radius: 999px;
-    font-size: 13px;
+    display: none !important;
+  }
+
+  /* ---------- Timeline scrubber ---------- */
+  .timeline-wrap {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 8px 10px;
+  }
+  .timeline-wrap label {
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: var(--text-dim);
+    margin-bottom: 6px;
     font-weight: 600;
-    z-index: 9;
-    box-shadow: 0 0 30px rgba(124, 92, 255, 0.4);
-    display: none;
-    align-items: center; gap: 8px;
-    animation: pulse 1.2s ease-in-out infinite;
+    text-transform: uppercase;
+    letter-spacing: 1px;
   }
-  .wait-banner.show { display: flex; }
-  .wait-banner .icon {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 10px var(--accent);
+  .timeline-wrap label .val { color: var(--text); font-variant-numeric: tabular-nums; }
+  input[type="range"]#timelineSlider::-webkit-slider-runnable-track {
+    height: 6px;
+    background: linear-gradient(90deg, var(--lh), var(--rh));
+    border-radius: 3px;
+    box-shadow: inset 0 0 6px rgba(0,0,0,0.4);
   }
-  @keyframes pulse {
-    0%, 100% { box-shadow: 0 0 20px rgba(124, 92, 255, 0.3); }
-    50% { box-shadow: 0 0 40px rgba(124, 92, 255, 0.7); }
+  input[type="range"]#timelineSlider::-moz-range-track {
+    height: 6px;
+    background: linear-gradient(90deg, var(--lh), var(--rh));
+    border-radius: 3px;
+  }
+  input[type="range"]#timelineSlider::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #fff;
+    margin-top: -6px;
+    box-shadow: 0 0 10px rgba(255,255,255,0.7), 0 0 18px var(--rh-glow);
+    cursor: pointer;
+    border: 2px solid var(--accent);
+  }
+  input[type="range"]#timelineSlider::-moz-range-thumb {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 10px rgba(255,255,255,0.7), 0 0 18px var(--rh-glow);
+    cursor: pointer;
+    border: 2px solid var(--accent);
   }
 
   /* ---------- Toggle Panel Button ---------- */
@@ -364,7 +383,7 @@
   <div class="topbar">
     <div class="brand">
       <span class="dot"></span>
-      <span>Waterfall Piano</span>
+      <span>NeoKeys</span>
     </div>
     <div class="topbar-right">
       <div class="pill" id="midiStatus"><span class="led"></span><span id="midiStatusText">No MIDI</span></div>
@@ -378,11 +397,7 @@
     <button class="tbtn" id="panelToggleBtn" title="Settings">⚙</button>
   </div>
 
-  <!-- Wait banner -->
-  <div class="wait-banner" id="waitBanner">
-    <span class="icon"></span>
-    <span id="waitText">Play the highlighted note(s)…</span>
-  </div>
+  <!-- Wait banner removed — practice indicators now render directly on falling note blocks -->
 
   <!-- Control Panel -->
   <div class="panel" id="panel">
@@ -411,6 +426,12 @@
       <input type="range" id="volSlider" min="0" max="100" step="1" value="80" />
     </div>
 
+    <h3 style="margin-top:10px;">Timeline</h3>
+    <div class="timeline-wrap">
+      <label>Position <span class="val" id="timelineVal">0:00 / 0:00</span></label>
+      <input type="range" id="timelineSlider" min="0" max="1000" step="1" value="0" />
+    </div>
+
     <h3 style="margin-top:10px;">MIDI File</h3>
     <label class="file-btn" for="fileInput">
       📁 Load .mid file
@@ -421,7 +442,7 @@
 
   <!-- Start overlay -->
   <div class="start-overlay" id="startOverlay">
-    <h1>🎹 Waterfall Piano</h1>
+    <h1>🎹 NeoKeys</h1>
     <p>A Synthesia-style player with physical MIDI input, practice mode, and full piano sound. Tap below to enable audio and start.</p>
     <button class="start-btn" id="startBtn">Tap to Start</button>
     <p style="font-size:11px; opacity:0.6;">Tip: Rotate your phone to landscape for the best experience.</p>
@@ -432,7 +453,7 @@
 'use strict';
 
 /* =====================================================================
-   WATERFALL PIANO — single-file Synthesia clone
+   NeoKeys — single-file Synthesia clone
    --------------------------------------------------------------------- */
 
 // ---------- Constants ----------
@@ -771,8 +792,82 @@ const playBtn = document.getElementById('playBtn');
 const rewindBtn = document.getElementById('rewindBtn');
 const panelToggleBtn = document.getElementById('panelToggleBtn');
 const panel = document.getElementById('panel');
-const waitBanner = document.getElementById('waitBanner');
-const waitText = document.getElementById('waitText');
+// Wait-banner element removed in NeoKeys redesign — keep null refs so legacy callers stay safe.
+const waitBanner = null;
+const waitText = null;
+const timelineSlider = document.getElementById('timelineSlider');
+const timelineVal = document.getElementById('timelineVal');
+let timelineScrubbing = false;
+
+function formatTime(ms) {
+  if (!isFinite(ms) || ms < 0) ms = 0;
+  const totalSec = Math.floor(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return m + ':' + (s < 10 ? '0' + s : s);
+}
+
+function updateTimelineUI() {
+  if (!timelineSlider) return;
+  const dur = state.songDuration || 0;
+  if (!timelineScrubbing) {
+    const pct = dur > 0 ? (state.songTime / dur) * 1000 : 0;
+    timelineSlider.value = String(Math.max(0, Math.min(1000, pct)));
+  }
+  if (timelineVal) {
+    timelineVal.textContent = formatTime(state.songTime) + ' / ' + formatTime(dur);
+  }
+}
+
+function scrubToTime(newTime) {
+  const dur = state.songDuration || 0;
+  const clamped = Math.max(0, Math.min(dur, newTime));
+  state.songTime = clamped;
+  // Reset wait-state so we don't stay frozen waiting for a chord that already passed.
+  state.waiting = false;
+  state.waitingFor.clear();
+  hideWaitBanner();
+  // Recompute trigger/release flags relative to the new playhead so the canvas
+  // loop and audio scheduler stay consistent whether the user scrubbed forward
+  // or backward.
+  for (const n of state.notes) {
+    if (n.endMs < clamped) {
+      // Note is fully in the past — mark as triggered & released so it won't replay
+      n.triggered = true;
+      n.released = true;
+    } else if (n.startMs <= clamped && clamped <= n.endMs) {
+      // Note straddles the playhead — consider it already triggered (don't retrigger sound)
+      n.triggered = true;
+      n.released = false;
+    } else {
+      // Future note — reset so it will trigger normally as time advances
+      n.triggered = false;
+      n.released = false;
+    }
+  }
+  // Release any sustained audio so we don't get hung notes after a jump.
+  if (audioReady && pianoSampler) {
+    try { pianoSampler.releaseAll(); } catch (e) { /* ignore */ }
+  }
+  state.lastFrameTs = performance.now();
+}
+
+if (timelineSlider) {
+  timelineSlider.addEventListener('pointerdown', () => { timelineScrubbing = true; });
+  timelineSlider.addEventListener('pointerup',   () => { timelineScrubbing = false; });
+  timelineSlider.addEventListener('touchstart',  () => { timelineScrubbing = true; }, { passive: true });
+  timelineSlider.addEventListener('touchend',    () => { timelineScrubbing = false; });
+  timelineSlider.addEventListener('input', () => {
+    timelineScrubbing = true;
+    const dur = state.songDuration || 0;
+    const pct = parseFloat(timelineSlider.value) / 1000;
+    scrubToTime(pct * dur);
+    if (timelineVal) {
+      timelineVal.textContent = formatTime(state.songTime) + ' / ' + formatTime(dur);
+    }
+  });
+  timelineSlider.addEventListener('change', () => { timelineScrubbing = false; });
+}
 
 speedSlider.addEventListener('input', () => {
   state.speed = parseFloat(speedSlider.value);
@@ -833,14 +928,11 @@ document.getElementById('startBtn').addEventListener('click', async () => {
   resize();
 });
 
-function showWaitBanner(midis) {
-  waitBanner.classList.add('show');
-  const names = [...midis].map(noteName).join(', ');
-  waitText.textContent = `Play: ${names}`;
-}
-function hideWaitBanner() {
-  waitBanner.classList.remove('show');
-}
+// Wait-banner UI was removed in NeoKeys — practice indicators now render
+// directly on the falling note blocks inside drawWaterfall(). These stubs are
+// kept so the existing state-machine call sites keep working unchanged.
+function showWaitBanner(_midis) { /* no-op: visual indicator is on the blocks */ }
+function hideWaitBanner()       { /* no-op */ }
 
 // ---------- Touch input on piano (optional bonus) ----------
 const touchActive = new Map(); // touchId -> midi
@@ -1045,6 +1137,30 @@ function drawWaterfall() {
       ctx.stroke();
       ctx.restore();
     }
+
+    // ---- Practice-mode label: render note name centered inside the block ----
+    // Mirrors the Synthesia-style learning overlay. Only drawn in practice mode
+    // so it doesn't clutter normal playback.
+    if (state.mode === 'practice') {
+      const label = noteLetter(n.midi); // e.g. 'C', 'D#', 'G'
+      // Font scales with block width but is clamped so it stays legible on
+      // mobile and never overflows a thin black-key block.
+      const fontSize = Math.max(8, Math.min(16, w * 0.55));
+      // Only draw if the block is tall/wide enough to fit the glyph reasonably.
+      if (h >= fontSize + 2 && w >= fontSize * 0.8) {
+        ctx.save();
+        ctx.font = '600 ' + fontSize + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        // Contrast: waiting blocks are white-tinted → use dark gray; otherwise white.
+        ctx.fillStyle = isWaiting ? '#1a1a2a' : '#ffffff';
+        // Subtle shadow for readability over the gradient body.
+        ctx.shadowColor = 'rgba(0,0,0,0.45)';
+        ctx.shadowBlur = 2;
+        ctx.fillText(label, x + w / 2, y + h / 2);
+        ctx.restore();
+      }
+    }
   }
 
   // Hit line
@@ -1099,16 +1215,36 @@ function drawPiano() {
     ctx.lineWidth = 1;
     ctx.strokeRect(k.x + 0.5, pianoY + 0.5, k.w - 1, pianoH - 1);
 
-    // Label: only show C with octave numbers, and letters for all whites when key is wide enough
-    const showAll = whiteKeyW > 22;
+    // ---- Responsive labels ----
+    // Strategy (mobile-friendly):
+    //   • Always show the C label with its octave (anchor for orientation).
+    //   • Show all white-key letters when the key is wide enough to fit them.
+    //   • Font size scales with key width but is clamped so it never disappears
+    //     on narrow Android landscape views and never overflows wide keys.
     const isC = (k.midi % 12) === 0;
+    // Lower the show-all threshold significantly so labels appear on mobile too.
+    // A single capital letter at ~7px is still readable; we just scale the font.
+    const showAll = whiteKeyW >= 10;
     if (showAll || isC) {
-      ctx.fillStyle = litInfo ? 'rgba(0,0,0,0.65)' : (isC ? '#7c5cff' : '#8a90b3');
-      ctx.font = (isC ? 'bold ' : '') + Math.max(9, Math.min(12, whiteKeyW * 0.45)) + 'px -apple-system, sans-serif';
+      // Octave labels like "C4" need a bit more horizontal room — use a smaller
+      // font when the key is narrow so the text never clips outside the key.
+      let fontSize;
+      if (isC) {
+        // Reserve ~80% of the key width for a 2-char string like "C4".
+        fontSize = Math.max(7, Math.min(13, whiteKeyW * 0.42));
+      } else {
+        // Single-letter labels can use a higher ratio.
+        fontSize = Math.max(7, Math.min(12, whiteKeyW * 0.5));
+      }
+      ctx.fillStyle = litInfo ? 'rgba(0,0,0,0.75)' : (isC ? '#7c5cff' : '#8a90b3');
+      ctx.font = (isC ? 'bold ' : '600 ') + fontSize + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
       const label = isC ? noteName(k.midi) : noteLetter(k.midi);
-      ctx.fillText(label, k.x + k.w/2, pianoY + pianoH - 6);
+      // Bottom padding scales with piano height so it doesn't get cut off in
+      // short landscape views on phones.
+      const pad = Math.max(3, Math.min(8, pianoH * 0.05));
+      ctx.fillText(label, k.x + k.w / 2, pianoY + pianoH - pad);
     }
   }
 
@@ -1137,13 +1273,15 @@ function drawPiano() {
     ctx.fillStyle = 'rgba(255,255,255,0.06)';
     ctx.fillRect(k.x + 2, pianoY + 2, k.w - 4, 2);
 
-    // Label for wider black keys
-    if (blackKeyW > 16) {
-      ctx.fillStyle = litInfo ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.45)';
-      ctx.font = Math.max(8, Math.min(10, blackKeyW * 0.5)) + 'px -apple-system, sans-serif';
+    // Label for black keys — lowered threshold so labels stay visible in mobile
+    // landscape. Font scales with the (narrower) black-key width.
+    if (blackKeyW >= 8) {
+      const fontSize = Math.max(6, Math.min(10, blackKeyW * 0.55));
+      ctx.fillStyle = litInfo ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.55)';
+      ctx.font = '600 ' + fontSize + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
-      ctx.fillText(noteLetter(k.midi), k.x + k.w/2, pianoY + blackKeyH - 4);
+      ctx.fillText(noteLetter(k.midi), k.x + k.w / 2, pianoY + blackKeyH - 3);
     }
   }
 
@@ -1190,6 +1328,9 @@ function frame(ts) {
   drawWaterfall();
   drawPiano();
 
+  // Keep the timeline slider in sync with playhead (unless user is dragging it)
+  updateTimelineUI();
+
   requestAnimationFrame(frame);
 }
 
@@ -1202,6 +1343,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
