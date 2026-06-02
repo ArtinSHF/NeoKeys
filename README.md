@@ -8,7 +8,7 @@ The project is inspired by piano learning apps with falling-note visualizations,
 
 NeoKeys runs online using Vercel.
 
-Vercel link: PASTE_VERCEL_LINK_HERE
+Vercel link: https://neo-keys.vercel.app
 
 ## 🎮 About the Project
 
