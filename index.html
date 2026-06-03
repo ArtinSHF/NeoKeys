@@ -363,12 +363,134 @@
   }
   .start-btn:active { transform: scale(0.97); }
 
+  /* ---------- Score HUD ---------- */
+  .score-hud {
+    pointer-events: none;
+    background: var(--panel);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--panel-border);
+    padding: 8px 14px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    font-variant-numeric: tabular-nums;
+  }
+  .score-hud .lbl {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 600;
+  }
+  .score-hud .val {
+    background: linear-gradient(135deg, var(--lh), var(--rh));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-size: 16px;
+  }
+
+  /* ---------- Record button styling on transport ---------- */
+  .tbtn.record {
+    background: linear-gradient(135deg, #ff3d3d, #b81f1f);
+    box-shadow: 0 4px 14px rgba(255, 61, 61, 0.4);
+  }
+  .tbtn.record.recording {
+    animation: recPulse 1s ease-in-out infinite;
+  }
+  @keyframes recPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 61, 61, 0.7); }
+    50%      { box-shadow: 0 0 0 10px rgba(255, 61, 61, 0); }
+  }
+
+  /* ---------- End-of-song victory modal ---------- */
+  .victory-overlay {
+    position: absolute; inset: 0;
+    background: rgba(7, 7, 12, 0.7);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    z-index: 90;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    animation: victoryFade 0.35s ease;
+  }
+  .victory-overlay.hidden { display: none; }
+  @keyframes victoryFade {
+    from { opacity: 0; transform: scale(0.98); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .victory-card {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 22px;
+    padding: 28px 28px 22px;
+    max-width: 380px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.6), 0 0 80px rgba(124, 92, 255, 0.15);
+  }
+  .victory-card .trophy { font-size: 44px; line-height: 1; margin-bottom: 4px; }
+  .victory-card h2 {
+    margin: 6px 0 4px;
+    font-size: 22px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--lh), var(--rh));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: -0.4px;
+  }
+  .victory-card .sub {
+    color: var(--text-dim);
+    font-size: 12px;
+    margin-bottom: 14px;
+  }
+  .victory-card .final-score {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text);
+    margin: 8px 0 18px;
+    font-variant-numeric: tabular-nums;
+  }
+  .victory-card .final-score span {
+    background: linear-gradient(135deg, var(--lh), var(--rh));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .victory-actions { display: flex; flex-direction: column; gap: 8px; }
+  .victory-actions button {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.10);
+    color: var(--text);
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .victory-actions button:hover { background: rgba(255,255,255,0.09); }
+  .victory-actions button.primary {
+    background: linear-gradient(135deg, var(--accent), #5a3dff);
+    border-color: transparent;
+    box-shadow: 0 6px 18px rgba(124, 92, 255, 0.45);
+  }
+
   @media (max-width: 800px) {
     .panel { width: 240px; top: 56px; }
     .brand { font-size: 12px; padding: 6px 10px; }
     .topbar-right .pill { padding: 6px 10px; font-size: 10px; }
+    .topbar-right .score-hud { padding: 6px 10px; font-size: 11px; }
+    .topbar-right .score-hud .val { font-size: 13px; }
     .transport { top: 8px; }
     .tbtn { width: 34px; height: 34px; }
+    .victory-card { padding: 22px 18px 16px; }
+    .victory-card h2 { font-size: 19px; }
   }
   @media (max-height: 450px) {
     .panel { max-height: calc(100vh - 70px); overflow-y: auto; }
@@ -386,6 +508,10 @@
       <span>NeoKeys</span>
     </div>
     <div class="topbar-right">
+      <div class="score-hud" id="scoreHud">
+        <span class="lbl">Score</span>
+        <span class="val" id="scoreVal">0</span>
+      </div>
       <div class="pill" id="midiStatus"><span class="led"></span><span id="midiStatusText">No MIDI</span></div>
     </div>
   </div>
@@ -394,6 +520,7 @@
   <div class="transport">
     <button class="tbtn" id="rewindBtn" title="Restart">⏮</button>
     <button class="tbtn play" id="playBtn" title="Play/Pause">▶</button>
+    <button class="tbtn record" id="recordBtn" title="Record">●</button>
     <button class="tbtn" id="panelToggleBtn" title="Settings">⚙</button>
   </div>
 
@@ -405,6 +532,7 @@
     <div class="row">
       <button class="btn active" id="modeNormal">Normal</button>
       <button class="btn" id="modePractice">Practice</button>
+      <button class="btn" id="modeFreeplay">Freeplay</button>
     </div>
 
     <h3>Practice Hands</h3>
@@ -432,12 +560,29 @@
       <input type="range" id="timelineSlider" min="0" max="1000" step="1" value="0" />
     </div>
 
+    <h3 style="margin-top:10px;">Hand Split Threshold</h3>
+    <div class="slider-wrap">
+      <label>Split <span class="val" id="handSplitVal">Auto</span></label>
+      <input type="range" id="handSplitSlider" min="20" max="108" step="1" value="60" />
+    </div>
+
     <h3 style="margin-top:10px;">MIDI File</h3>
     <label class="file-btn" for="fileInput">
       📁 Load .mid file
       <span class="filename" id="fileName">No file loaded</span>
     </label>
     <input type="file" id="fileInput" accept=".mid,.midi,audio/midi,audio/x-midi" />
+  </div>
+
+  <!-- End-of-song victory modal -->
+  <div class="victory-overlay hidden" id="victoryOverlay">
+    <div class="victory-card">
+      <div class="trophy" id="victoryTrophy">🏆</div>
+      <h2 id="victoryTitle">Song Complete!</h2>
+      <div class="sub" id="victorySub">Nice run.</div>
+      <div class="final-score" id="victoryScore" style="display:none;">Score: <span id="victoryScoreVal">0</span></div>
+      <div class="victory-actions" id="victoryActions"></div>
+    </div>
   </div>
 
   <!-- Start overlay -->
@@ -554,7 +699,7 @@ window.addEventListener('orientationchange', () => setTimeout(resize, 200));
 
 // ---------- State ----------
 const state = {
-  mode: 'normal',          // 'normal' | 'practice'
+  mode: 'normal',          // 'normal' | 'practice' | 'freeplay'
   hand: 'both',            // 'lh' | 'rh' | 'both'
   speed: 1.0,
   volume: 0.8,
@@ -572,6 +717,31 @@ const state = {
   waiting: false,
   waitingFor: new Set(),   // midi notes that must be pressed to resume
   waitGroupEndTime: 0,
+  waitStartedAt: 0,        // perf.now() when current wait began — used for scoring reaction time
+
+  // ---- Freeplay mode ----
+  // Each entry: { midi, hand, startTs, endTs (null while held) }
+  freeplayBlocks: [],
+
+  // ---- Session recording ----
+  recording: {
+    active: false,
+    startTs: 0,
+    events: [],            // {midi, velocity, startMs, durMs, _openAt}
+    openByMidi: new Map(), // midi -> event currently being held (for off-pairing)
+  },
+
+  // ---- Scoring ----
+  score: 0,
+  floaters: [],            // {text, x, y, color, life, maxLife, vy}
+
+  // ---- Hand split ----
+  // -1 = auto (use original smart track/channel detection on load).
+  // 20..108 = manual MIDI note number; notes >= threshold are RH, < are LH.
+  handSplit: -1,
+
+  // ---- Victory flag ----
+  songEnded: false,
 };
 
 // Look-ahead time (ms) for waterfall (how far above the hit line we render).
@@ -676,19 +846,108 @@ function onMIDIMessage(e) {
 function handleUserNoteOn(midi, velocity) {
   state.activeMidiPressed.add(midi);
   attackNote(midi, velocity);
-  // If waiting, see if this satisfies waiting set
+
+  // ---- Session recording capture ----
+  if (state.recording.active) {
+    const now = performance.now();
+    const ev = {
+      midi,
+      velocity,
+      startMs: now - state.recording.startTs,
+      durMs: 0,
+      _openAt: now,
+    };
+    state.recording.events.push(ev);
+    state.recording.openByMidi.set(midi, ev);
+  }
+
+  // ---- Freeplay: spawn an upward-floating block ----
+  if (state.mode === 'freeplay') {
+    const hand = (state.handSplit >= 0)
+      ? (midi >= state.handSplit ? 'rh' : 'lh')
+      : (midi >= 60 ? 'rh' : 'lh');
+    state.freeplayBlocks.push({
+      midi, hand,
+      startTs: performance.now(),
+      endTs: null,
+    });
+  }
+
+  // ---- Practice mode: waiting-set satisfaction + scoring ----
   if (state.waiting && state.waitingFor.has(midi)) {
+    awardHit(midi);
     state.waitingFor.delete(midi);
     if (state.waitingFor.size === 0) {
-      // Resume!
+      // Chord fully satisfied → resume playback
       state.waiting = false;
       hideWaitBanner();
     }
+  } else if (state.waiting && state.mode === 'practice') {
+    // Wrong note while waiting → penalty
+    awardMiss(midi);
   }
 }
 function handleUserNoteOff(midi) {
   state.activeMidiPressed.delete(midi);
   releaseNote(midi);
+
+  // ---- Session recording: close out the open event for this midi ----
+  if (state.recording.active) {
+    const ev = state.recording.openByMidi.get(midi);
+    if (ev) {
+      ev.durMs = Math.max(40, performance.now() - ev._openAt);
+      state.recording.openByMidi.delete(midi);
+    }
+  }
+
+  // ---- Freeplay: terminate the trailing edge of the most recent open block ----
+  if (state.mode === 'freeplay') {
+    // Find the newest still-open block for this midi and close it.
+    for (let i = state.freeplayBlocks.length - 1; i >= 0; i--) {
+      const b = state.freeplayBlocks[i];
+      if (b.midi === midi && b.endTs == null) {
+        b.endTs = performance.now();
+        break;
+      }
+    }
+  }
+}
+
+// ---------- Scoring ----------
+const scoreValEl = () => document.getElementById('scoreVal');
+function setScore(v) {
+  state.score = v;
+  const el = scoreValEl();
+  if (el) el.textContent = String(v);
+}
+function awardHit(midi) {
+  // Scale points by reaction speed: instant ≤150 ms → +100; linearly down to +20 by 1500 ms.
+  const reaction = state.waitStartedAt > 0
+    ? Math.max(0, performance.now() - state.waitStartedAt)
+    : 0;
+  let pts;
+  if (reaction <= 150)      pts = 100;
+  else if (reaction >= 1500) pts = 20;
+  else                       pts = Math.round(100 - ((reaction - 150) / (1500 - 150)) * 80);
+  setScore(state.score + pts);
+  spawnFloater('+' + pts, midi, pts >= 90 ? '#36e07f' : '#7c5cff');
+}
+function awardMiss(midi) {
+  setScore(state.score - 50);
+  spawnFloater('-50', midi, '#ff5577');
+}
+function spawnFloater(text, midi, color) {
+  const key = getKey(midi);
+  if (!key) return;
+  state.floaters.push({
+    text,
+    color,
+    x: key.x + key.w / 2,
+    y: pianoY - 6,
+    vy: -0.6,                  // px / ms upward
+    life: 0,
+    maxLife: 900,              // ms
+  });
 }
 
 // ---------- MIDI File Parsing ----------
@@ -709,6 +968,20 @@ fileInput.addEventListener('change', async (e) => {
     alert('Failed to parse MIDI: ' + err.message);
   }
 });
+
+function applyHandSplit() {
+  // Re-color all loaded notes (and any freeplay blocks) according to the
+  // current state.handSplit. When -1 we leave whatever was decided on load
+  // (the smart track/channel heuristic).
+  if (state.handSplit < 0) return;
+  const t = state.handSplit;
+  for (const n of state.notes) {
+    n.hand = n.midi >= t ? 'rh' : 'lh';
+  }
+  for (const b of state.freeplayBlocks) {
+    b.hand = b.midi >= t ? 'rh' : 'lh';
+  }
+}
 
 function loadMidiObject(midi) {
   // Build flat note list with absolute ms.
@@ -774,6 +1047,12 @@ function loadMidiObject(midi) {
   hideWaitBanner();
   // Reset trigger flags
   for (const n of state.notes) { n.triggered = false; n.released = false; }
+  // Reset scoring & end-of-song flag for the fresh track
+  setScore(0);
+  state.songEnded = false;
+  hideVictoryOverlay();
+  // If the user has overridden the split, re-apply it on top of the smart guess.
+  applyHandSplit();
   // Auto play
   setPlaying(true);
 }
@@ -790,6 +1069,17 @@ const handRHBtn = document.getElementById('handRH');
 const handBothBtn = document.getElementById('handBoth');
 const playBtn = document.getElementById('playBtn');
 const rewindBtn = document.getElementById('rewindBtn');
+const modeFreeplayBtn = document.getElementById('modeFreeplay');
+const recordBtn = document.getElementById('recordBtn');
+const handSplitSlider = document.getElementById('handSplitSlider');
+const handSplitVal = document.getElementById('handSplitVal');
+const victoryOverlay = document.getElementById('victoryOverlay');
+const victoryTitle = document.getElementById('victoryTitle');
+const victorySub = document.getElementById('victorySub');
+const victoryActions = document.getElementById('victoryActions');
+const victoryTrophy = document.getElementById('victoryTrophy');
+const victoryScoreWrap = document.getElementById('victoryScore');
+const victoryScoreVal = document.getElementById('victoryScoreVal');
 const panelToggleBtn = document.getElementById('panelToggleBtn');
 const panel = document.getElementById('panel');
 // Wait-banner element removed in NeoKeys redesign — keep null refs so legacy callers stay safe.
@@ -880,15 +1170,35 @@ volSlider.addEventListener('input', () => {
 });
 
 function setMode(m) {
+  const prev = state.mode;
   state.mode = m;
-  modeNormalBtn.classList.toggle('active', m === 'normal');
+  modeNormalBtn.classList.toggle('active',   m === 'normal');
   modePracticeBtn.classList.toggle('active', m === 'practice');
-  if (m === 'normal') {
-    state.waiting = false; state.waitingFor.clear(); hideWaitBanner();
+  modeFreeplayBtn.classList.toggle('active', m === 'freeplay');
+
+  // Always exit any wait state when switching modes.
+  state.waiting = false; state.waitingFor.clear(); hideWaitBanner();
+
+  if (m === 'freeplay') {
+    // Freeplay totally ignores the loaded song. Pause the timeline, clear visual
+    // note grid, and start with an empty block buffer so the canvas is clean.
+    setPlaying(false);
+    state.freeplayBlocks.length = 0;
+    state.floaters.length = 0;
+    hideVictoryOverlay();
+  } else if (prev === 'freeplay') {
+    // Coming back from freeplay → drop any lingering floating blocks.
+    state.freeplayBlocks.length = 0;
+  }
+
+  if (m === 'practice') {
+    // Fresh practice run: zero the score so the user sees their progress for this attempt.
+    setScore(0);
   }
 }
-modeNormalBtn.addEventListener('click', () => setMode('normal'));
+modeNormalBtn.addEventListener('click',   () => setMode('normal'));
 modePracticeBtn.addEventListener('click', () => setMode('practice'));
+modeFreeplayBtn.addEventListener('click', () => setMode('freeplay'));
 
 function setHand(h) {
   state.hand = h;
@@ -908,14 +1218,181 @@ function setPlaying(p) {
 }
 playBtn.addEventListener('click', async () => {
   await initAudio();
+  // If the song already ended, treat play as a clean restart.
+  if (state.songEnded) {
+    restartCurrentSong();
+    return;
+  }
   setPlaying(!state.playing);
 });
-rewindBtn.addEventListener('click', () => {
+function restartCurrentSong() {
   state.songTime = 0;
   state.waiting = false; state.waitingFor.clear();
   hideWaitBanner();
   for (const n of state.notes) { n.triggered = false; n.released = false; }
+  setScore(0);
+  state.songEnded = false;
+  hideVictoryOverlay();
+  if (audioReady && pianoSampler) { try { pianoSampler.releaseAll(); } catch(e) {} }
+  setPlaying(true);
+}
+rewindBtn.addEventListener('click', () => {
+  restartCurrentSong();
 });
+
+// ---------- Recording transport ----------
+function startRecording() {
+  // Cleanly start a fresh recording session. Audio sampler is initialized
+  // lazily on first user gesture (handled by the start overlay), so by the
+  // time the button is clickable we should be ready.
+  state.recording.active = true;
+  state.recording.startTs = performance.now();
+  state.recording.events = [];
+  state.recording.openByMidi.clear();
+  recordBtn.classList.add('recording');
+  recordBtn.textContent = '■';
+  recordBtn.title = 'Stop recording';
+}
+function stopRecording() {
+  state.recording.active = false;
+  recordBtn.classList.remove('recording');
+  recordBtn.textContent = '●';
+  recordBtn.title = 'Record';
+
+  // Close any keys still being held when the user hit stop.
+  const stopTs = performance.now();
+  for (const ev of state.recording.openByMidi.values()) {
+    ev.durMs = Math.max(40, stopTs - ev._openAt);
+  }
+  state.recording.openByMidi.clear();
+
+  if (state.recording.events.length === 0) {
+    // Nothing was played — bail without clobbering the loaded song.
+    return;
+  }
+
+  // Pack into the app's native note structure.
+  const notes = state.recording.events.map(ev => {
+    const startMs = ev.startMs;
+    const durMs = Math.max(40, ev.durMs);
+    const hand = (state.handSplit >= 0)
+      ? (ev.midi >= state.handSplit ? 'rh' : 'lh')
+      : (ev.midi >= 60 ? 'rh' : 'lh');
+    return {
+      midi: ev.midi,
+      startMs,
+      endMs: startMs + durMs,
+      durMs,
+      velocity: ev.velocity,
+      hand,
+      triggered: false,
+      released: false,
+    };
+  }).sort((a, b) => a.startMs - b.startMs);
+
+  // Load straight into state.notes — wipes any previously loaded song.
+  state.notes = notes;
+  state.songDuration = notes.length
+    ? Math.max(...notes.map(n => n.endMs)) + 1000
+    : 0;
+  state.songTime = 0;
+  state.waiting = false; state.waitingFor.clear();
+  hideWaitBanner();
+  setScore(0);
+  state.songEnded = false;
+  hideVictoryOverlay();
+  fileNameEl.textContent = 'My Recording';
+  // Switch back to Normal so the user can hear their take immediately —
+  // they can flip to Practice from the mode row whenever they want.
+  if (state.mode === 'freeplay') setMode('normal');
+  setPlaying(true);
+}
+recordBtn.addEventListener('click', async () => {
+  await initAudio();
+  // Recording always works against the live timeline, so leave Freeplay if needed.
+  if (state.recording.active) {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+});
+
+// ---------- Hand-split slider ----------
+function updateHandSplitLabel() {
+  if (!handSplitVal) return;
+  if (state.handSplit < 0) {
+    handSplitVal.textContent = 'Auto';
+  } else {
+    handSplitVal.textContent = noteName(state.handSplit) + ' (' + state.handSplit + ')';
+  }
+}
+if (handSplitSlider) {
+  // Initial label.
+  updateHandSplitLabel();
+  handSplitSlider.addEventListener('input', () => {
+    state.handSplit = parseInt(handSplitSlider.value, 10);
+    updateHandSplitLabel();
+    applyHandSplit();
+  });
+}
+
+// ---------- Victory / end-of-song modal ----------
+function hideVictoryOverlay() {
+  if (victoryOverlay) victoryOverlay.classList.add('hidden');
+}
+function showVictoryOverlay() {
+  if (!victoryOverlay) return;
+  // Stop playback while the modal is up so audio doesn't keep advancing.
+  setPlaying(false);
+
+  const isPractice = state.mode === 'practice';
+  victoryTrophy.textContent = isPractice ? '🎯' : '🏆';
+  victoryTitle.textContent  = isPractice ? 'Practice Complete!' : 'Song Complete!';
+  victorySub.textContent    = isPractice
+    ? 'Great work — try it again or take it up a level.'
+    : 'Nice run. What\'s next?';
+
+  // Show score in practice mode only (Normal mode doesn't score).
+  if (isPractice) {
+    victoryScoreWrap.style.display = '';
+    victoryScoreVal.textContent = String(state.score);
+  } else {
+    victoryScoreWrap.style.display = 'none';
+  }
+
+  // Build the action buttons fresh each time so listeners don't pile up.
+  victoryActions.innerHTML = '';
+  const mkBtn = (label, primary, onClick) => {
+    const b = document.createElement('button');
+    b.textContent = label;
+    if (primary) b.classList.add('primary');
+    b.addEventListener('click', onClick);
+    victoryActions.appendChild(b);
+  };
+  mkBtn('🔁  Restart Song', true, () => {
+    hideVictoryOverlay();
+    restartCurrentSong();
+  });
+  mkBtn('📁  Choose New Song', false, () => {
+    hideVictoryOverlay();
+    fileInput.click();
+  });
+  if (isPractice) {
+    mkBtn('🎼  Switch to Normal Mode', false, () => {
+      hideVictoryOverlay();
+      setMode('normal');
+      restartCurrentSong();
+    });
+  } else {
+    mkBtn('🎯  Switch to Practice Mode', false, () => {
+      hideVictoryOverlay();
+      setMode('practice');
+      restartCurrentSong();
+    });
+  }
+
+  victoryOverlay.classList.remove('hidden');
+}
 
 panelToggleBtn.addEventListener('click', () => panel.classList.toggle('collapsed'));
 
@@ -978,6 +1455,32 @@ function shouldPauseForHand(hand) {
 }
 
 function update(dtMs) {
+  // Always age floaters so they keep animating even while paused/waiting.
+  if (state.floaters.length) {
+    for (const f of state.floaters) {
+      f.life += dtMs;
+      f.y += f.vy * dtMs;
+    }
+    state.floaters = state.floaters.filter(f => f.life < f.maxLife);
+  }
+
+  // Freeplay mode never advances the song timeline — it just prunes off-screen
+  // upward-floating blocks so memory doesn't grow unbounded.
+  if (state.mode === 'freeplay') {
+    if (state.freeplayBlocks.length) {
+      const now = performance.now();
+      const ppms = pxPerMs();
+      // A block is fully off-screen once its bottom (most recent point) rises
+      // past y=0. While still held, bottom stays at pianoY → never prunes.
+      state.freeplayBlocks = state.freeplayBlocks.filter(b => {
+        if (b.endTs == null) return true;
+        const yBottom = pianoY - (now - b.endTs) * ppms;
+        return yBottom > -20;
+      });
+    }
+    return;
+  }
+
   if (!state.playing) return;
   if (state.waiting) return;
 
@@ -1016,10 +1519,38 @@ function update(dtMs) {
             // Their start time is "now" effectively (paused), endMs stays the same
           }
         }
-        // Also auto-trigger non-pause-relevant notes that happen within the same window (so the other hand plays)
-        state.waitingFor = waitSet;
-        state.waiting = true;
-        showWaitBanner(waitSet);
+
+        // ---- FAST-PLAY BUG PATCH ----
+        // If the user *already* nailed any of these notes a hair before the
+        // engine officially paused (fast runs, trills, arpeggios), credit them
+        // instantly so we don't freeze the timeline waiting for keys that are
+        // already physically held down. If the chord is fully satisfied by
+        // this early input, skip the pause state entirely so playback never
+        // stutters.
+        for (const heldMidi of state.activeMidiPressed) {
+          if (waitSet.has(heldMidi)) {
+            // Credit a Perfect for the early hit (reaction window = 0).
+            const prevWaitStart = state.waitStartedAt;
+            state.waitStartedAt = performance.now(); // ⇒ reaction = 0 ⇒ +100
+            awardHit(heldMidi);
+            state.waitStartedAt = prevWaitStart;
+            waitSet.delete(heldMidi);
+          }
+        }
+
+        if (waitSet.size === 0) {
+          // Chord fully satisfied before pause — don't enter wait state at all.
+          // Leave nextTime where we clamped it (pauseAt); the next frame will
+          // continue advancing normally.
+          state.waiting = false;
+          state.waitingFor.clear();
+          hideWaitBanner();
+        } else {
+          state.waitingFor = waitSet;
+          state.waiting = true;
+          state.waitStartedAt = performance.now();
+          showWaitBanner(waitSet);
+        }
       }
     }
   }
@@ -1040,7 +1571,12 @@ function update(dtMs) {
 
   state.songTime = Math.min(nextTime, state.songDuration || nextTime);
   if (state.songDuration > 0 && state.songTime >= state.songDuration) {
-    setPlaying(false);
+    if (!state.songEnded) {
+      state.songEnded = true;
+      showVictoryOverlay();   // showVictoryOverlay() also pauses transport
+    } else {
+      setPlaying(false);
+    }
   }
 }
 
@@ -1063,6 +1599,84 @@ function clear() {
     if (!k.isBlack && (k.midi % 12) === 0) {
       ctx.fillRect(k.x, 0, 1, waterfallH);
     }
+  }
+}
+
+function drawFreeplayBlocks() {
+  // Render upward-floating blocks for Freeplay mode. Each block grows out of
+  // the piano bed and floats up off the top of the screen.
+  const ppms = pxPerMs();
+  const now  = performance.now();
+
+  for (const b of state.freeplayBlocks) {
+    const key = getKey(b.midi);
+    if (!key) continue;
+
+    // Oldest edge (the start moment) has risen the longest.
+    const yTop    = pianoY - (now - b.startTs) * ppms;
+    // Most-recent edge: while held it sticks to pianoY, after release it rises.
+    const recent  = b.endTs == null ? now : b.endTs;
+    const yBottom = pianoY - (now - recent) * ppms;
+
+    if (yBottom < -8) continue; // fully off-screen
+
+    const inset = 2;
+    const x = key.x + inset;
+    const w = Math.max(2, key.w - inset * 2);
+    const y = yTop;
+    const h = Math.max(3, yBottom - yTop);
+
+    const base = b.hand === 'lh' ? '#00d4ff' : '#ff3da6';
+    const glow = b.hand === 'lh' ? 'rgba(0,212,255,' : 'rgba(255,61,166,';
+
+    // Gradient: bright (recent) at the bottom, fading at the top as it floats away.
+    const grad = ctx.createLinearGradient(0, y, 0, y + h);
+    grad.addColorStop(0, glow + '0.25)');
+    grad.addColorStop(1, base);
+    ctx.fillStyle = grad;
+
+    const r = Math.min(6, w / 2, h / 2);
+    roundRect(ctx, x, y, w, h, r);
+    ctx.fill();
+
+    // Soft outline only for the freshest part of the block.
+    if (b.endTs == null || (now - b.endTs) < 500) {
+      ctx.save();
+      ctx.shadowColor = base;
+      ctx.shadowBlur = 14;
+      ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+      ctx.lineWidth = 1;
+      roundRect(ctx, x, y, w, h, r);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  // Hit line still drawn for visual reference.
+  const grad = ctx.createLinearGradient(0, pianoY - 2, 0, pianoY + 2);
+  grad.addColorStop(0,   'rgba(255,255,255,0.0)');
+  grad.addColorStop(0.5, 'rgba(255,255,255,0.9)');
+  grad.addColorStop(1,   'rgba(255,255,255,0.0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, pianoY - 2, W, 4);
+}
+
+function drawFloaters() {
+  // Brief +100 / -50 popups that float up above the struck key.
+  for (const f of state.floaters) {
+    const p = f.life / f.maxLife;          // 0 → 1
+    const alpha = 1 - p;
+    const fontSize = 18 + (1 - p) * 4;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.font = '800 ' + fontSize + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = f.color;
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = f.color;
+    ctx.fillText(f.text, f.x, f.y);
+    ctx.restore();
   }
 }
 
@@ -1325,8 +1939,14 @@ function frame(ts) {
   update(dt);
 
   clear();
-  drawWaterfall();
+  if (state.mode === 'freeplay') {
+    // Skip the song waterfall entirely — render only the user's upward blocks.
+    drawFreeplayBlocks();
+  } else {
+    drawWaterfall();
+  }
   drawPiano();
+  drawFloaters();
 
   // Keep the timeline slider in sync with playhead (unless user is dragging it)
   updateTimelineUI();
@@ -1343,6 +1963,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
