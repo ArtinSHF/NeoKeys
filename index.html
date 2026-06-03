@@ -108,6 +108,12 @@
     top: 56px; left: 10px;
     width: 280px;
     max-width: calc(100vw - 20px);
+    max-height: calc(100vh - 70px);
+    max-height: calc(100dvh - 70px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     background: var(--panel);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
@@ -118,7 +124,16 @@
     box-shadow: 0 12px 40px rgba(0,0,0,0.5);
     transition: transform 0.25s ease, opacity 0.25s ease;
     transform-origin: top left;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.18) transparent;
   }
+  .panel::-webkit-scrollbar { width: 8px; }
+  .panel::-webkit-scrollbar-track { background: transparent; }
+  .panel::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.18);
+    border-radius: 8px;
+  }
+  .panel::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.28); }
   .panel.collapsed { transform: scale(0.95) translateY(-10px); opacity: 0; pointer-events: none; }
 
   .panel h3 {
@@ -481,6 +496,137 @@
     box-shadow: 0 6px 18px rgba(124, 92, 255, 0.45);
   }
 
+  /* ---------- Neon select dropdown (Instrument Voice) ---------- */
+  .select-wrap {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 8px 10px;
+    position: relative;
+  }
+  .select-wrap label {
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: var(--text-dim);
+    margin-bottom: 6px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .select-wrap select {
+    width: 100%;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background: linear-gradient(135deg, rgba(124,92,255,0.12), rgba(255,61,166,0.08));
+    border: 1px solid rgba(255,255,255,0.12);
+    color: var(--text);
+    padding: 9px 30px 9px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: 0.3px;
+    transition: all 0.15s ease;
+    outline: none;
+    background-image:
+      linear-gradient(135deg, rgba(124,92,255,0.12), rgba(255,61,166,0.08)),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%237c5cff' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat: no-repeat, no-repeat;
+    background-position: 0 0, right 12px center;
+    background-size: 100% 100%, 10px 6px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+  }
+  .select-wrap select:hover {
+    border-color: rgba(124,92,255,0.55);
+    box-shadow: 0 0 0 1px rgba(124,92,255,0.25), 0 4px 14px rgba(124,92,255,0.18);
+  }
+  .select-wrap select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(124,92,255,0.35);
+  }
+  .select-wrap select option {
+    background: #15162a;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* ---------- Neon toggle switch (Mute Web Audio Synth) ---------- */
+  .toggle-row {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px;
+  }
+  .toggle-row .toggle-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    line-height: 1.3;
+    flex: 1;
+  }
+  .toggle-row .toggle-label .hint {
+    display: block;
+    color: var(--text);
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0.2px;
+    opacity: 0.55;
+    margin-top: 2px;
+  }
+  .switch {
+    --switch-w: 40px;
+    --switch-h: 22px;
+    position: relative;
+    width: var(--switch-w);
+    height: var(--switch-h);
+    flex-shrink: 0;
+    display: inline-block;
+  }
+  .switch input {
+    opacity: 0; width: 0; height: 0;
+    position: absolute;
+  }
+  .switch .slider-track {
+    position: absolute; cursor: pointer; inset: 0;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 999px;
+    transition: background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .switch .slider-track::before {
+    content: "";
+    position: absolute;
+    height: calc(var(--switch-h) - 8px);
+    width:  calc(var(--switch-h) - 8px);
+    left: 3px; top: 3px;
+    background: linear-gradient(135deg, #f5f6fb, #c9cde0);
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    transition: transform 0.22s cubic-bezier(.4,.0,.2,1), background 0.2s ease;
+  }
+  .switch input:checked + .slider-track {
+    background: linear-gradient(135deg, var(--lh), var(--rh));
+    border-color: transparent;
+    box-shadow: 0 0 0 1px rgba(124,92,255,0.35), 0 0 14px var(--rh-glow);
+  }
+  .switch input:checked + .slider-track::before {
+    transform: translateX(calc(var(--switch-w) - var(--switch-h)));
+    background: linear-gradient(135deg, #ffffff, #e8ecff);
+  }
+  .switch input:focus-visible + .slider-track {
+    box-shadow: 0 0 0 2px rgba(124,92,255,0.55);
+  }
+
+  .pill.hw {
+    color: var(--lh);
+  }
+
   @media (max-width: 800px) {
     .panel { width: 240px; top: 56px; }
     .brand { font-size: 12px; padding: 6px 10px; }
@@ -492,9 +638,7 @@
     .victory-card { padding: 22px 18px 16px; }
     .victory-card h2 { font-size: 19px; }
   }
-  @media (max-height: 450px) {
-    .panel { max-height: calc(100vh - 70px); overflow-y: auto; }
-  }
+
 </style>
 </head>
 <body>
@@ -552,6 +696,27 @@
     <div class="slider-wrap">
       <label>Output <span class="val" id="volVal">80%</span></label>
       <input type="range" id="volSlider" min="0" max="100" step="1" value="80" />
+    </div>
+
+    <h3 style="margin-top:10px;">Sound Engine</h3>
+    <div class="select-wrap">
+      <label>Instrument Voice <span class="val" id="instrumentVal">Grand Piano</span></label>
+      <select id="instrumentSelect">
+        <option value="grand" selected>🎹  Grand Piano</option>
+        <option value="cyber">⚡  Cyber Synth</option>
+        <option value="arcade">🕹️  8-Bit Arcade</option>
+        <option value="strings">🌌  Ambient Strings</option>
+      </select>
+    </div>
+    <div class="toggle-row" style="margin-top:8px;">
+      <span class="toggle-label">
+        Mute Web Audio Synth
+        <span class="hint">Route song to your hardware piano only</span>
+      </span>
+      <label class="switch">
+        <input type="checkbox" id="muteWebAudioToggle" />
+        <span class="slider-track"></span>
+      </label>
     </div>
 
     <h3 style="margin-top:10px;">Timeline</h3>
@@ -750,57 +915,245 @@ const LOOKAHEAD_MS = 3000;
 function pxPerMs() { return waterfallH / LOOKAHEAD_MS; }
 
 // ---------- Audio (Tone.js) ----------
-let pianoSampler = null;
-let audioReady = false;
+// Multi-instrument architecture. `currentInstrument` is the active Tone.js
+// polyphonic source — one of: Salamander Sampler (grand), PolySynth(Synth)
+// for cyber/arcade/strings. `pianoSampler` is kept as a backwards-compat alias
+// that always points at the active instrument so any leftover references in
+// the file (scrub releaseAll, volume updates, etc.) keep working unchanged.
+let currentInstrument     = null;
+let currentInstrumentName = 'grand';
+let pianoSampler          = null;  // legacy alias → currentInstrument
+let audioReady            = false;
+let muteWebAudio          = false; // when true, the web audio synth is silent
+
+// Cache of constructed instruments. Each entry: { node, fx: [extra Tone nodes] }.
+const instruments = {};
+
+// Build (lazily) and return one of the four sound profiles.
+function buildInstrument(name) {
+  if (instruments[name]) return instruments[name];
+  let node, fx = [];
+  switch (name) {
+    case 'grand': {
+      // Salamander acoustic grand — same sample set as before.
+      node = new Tone.Sampler({
+        urls: {
+          "A0": "A0.mp3", "C1": "C1.mp3", "D#1": "Ds1.mp3", "F#1": "Fs1.mp3",
+          "A1": "A1.mp3", "C2": "C2.mp3", "D#2": "Ds2.mp3", "F#2": "Fs2.mp3",
+          "A2": "A2.mp3", "C3": "C3.mp3", "D#3": "Ds3.mp3", "F#3": "Fs3.mp3",
+          "A3": "A3.mp3", "C4": "C4.mp3", "D#4": "Ds4.mp3", "F#4": "Fs4.mp3",
+          "A4": "A4.mp3", "C5": "C5.mp3", "D#5": "Ds5.mp3", "F#5": "Fs5.mp3",
+          "A5": "A5.mp3", "C6": "C6.mp3", "D#6": "Ds6.mp3", "F#6": "Fs6.mp3",
+          "A6": "A6.mp3", "C7": "C7.mp3", "D#7": "Ds7.mp3", "F#7": "Fs7.mp3",
+          "A7": "A7.mp3", "C8": "C8.mp3"
+        },
+        release: 1,
+        baseUrl: "https://tonejs.github.io/audio/salamander/",
+        onload: () => { console.log('Piano samples loaded'); }
+      }).toDestination();
+      break;
+    }
+    case 'cyber': {
+      // Sawtooth poly synth → chorus + short delay for a wide neon lead.
+      const chorus = new Tone.Chorus({
+        frequency: 1.6, delayTime: 3.5, depth: 0.7, feedback: 0.18, wet: 0.55
+      }).toDestination().start();
+      const delay  = new Tone.FeedbackDelay({
+        delayTime: 0.18, feedback: 0.22, wet: 0.18
+      }).connect(chorus);
+      node = new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: 'sawtooth' },
+        envelope:   { attack: 0.01, decay: 0.18, sustain: 0.55, release: 0.6 }
+      }).connect(delay);
+      fx = [delay, chorus];
+      break;
+    }
+    case 'arcade': {
+      // Classic chiptune square wave — no FX so it stays raw and punchy.
+      node = new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: 'square' },
+        envelope:   { attack: 0.005, decay: 0.08, sustain: 0.7, release: 0.12 }
+      }).toDestination();
+      break;
+    }
+    case 'strings': {
+      // Slow-attack pad through a gentle low-pass for a string-section feel.
+      const filter = new Tone.Filter({
+        type: 'lowpass', frequency: 2200, Q: 0.6
+      }).toDestination();
+      node = new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: 'triangle' },
+        envelope:   { attack: 0.85, decay: 0.4, sustain: 0.85, release: 2.4 }
+      }).connect(filter);
+      fx = [filter];
+      break;
+    }
+    default:
+      return null;
+  }
+  instruments[name] = { node, fx };
+  return instruments[name];
+}
+
+// Apply current state.volume to a given instrument node, honoring mute. We use
+// rampTo() for a click-free transition.
+function applyVolumeToInstrument(inst) {
+  if (!inst || !inst.node || !inst.node.volume) return;
+  const target = muteWebAudio
+    ? -Infinity
+    : Tone.gainToDb(Math.max(0.0001, state.volume));
+  try { inst.node.volume.rampTo(target, 0.04); }
+  catch (e) { inst.node.volume.value = target; }
+}
 
 async function initAudio() {
   if (audioReady) return;
   await Tone.start();
-  // Use Salamander piano samples from Tone's CDN (works offline-ish once cached).
-  pianoSampler = new Tone.Sampler({
-    urls: {
-      "A0": "A0.mp3", "C1": "C1.mp3", "D#1": "Ds1.mp3", "F#1": "Fs1.mp3",
-      "A1": "A1.mp3", "C2": "C2.mp3", "D#2": "Ds2.mp3", "F#2": "Fs2.mp3",
-      "A2": "A2.mp3", "C3": "C3.mp3", "D#3": "Ds3.mp3", "F#3": "Fs3.mp3",
-      "A3": "A3.mp3", "C4": "C4.mp3", "D#4": "Ds4.mp3", "F#4": "Fs4.mp3",
-      "A4": "A4.mp3", "C5": "C5.mp3", "D#5": "Ds5.mp3", "F#5": "Fs5.mp3",
-      "A5": "A5.mp3", "C6": "C6.mp3", "D#6": "Ds6.mp3", "F#6": "Fs6.mp3",
-      "A6": "A6.mp3", "C7": "C7.mp3", "D#7": "Ds7.mp3", "F#7": "Fs7.mp3",
-      "A7": "A7.mp3", "C8": "C8.mp3"
-    },
-    release: 1,
-    baseUrl: "https://tonejs.github.io/audio/salamander/",
-    onload: () => { console.log('Piano samples loaded'); }
-  }).toDestination();
-  pianoSampler.volume.value = Tone.gainToDb(state.volume);
+  // Build the default instrument now; the other three build on first selection.
+  const grand = buildInstrument('grand');
+  currentInstrument = grand.node;
+  currentInstrumentName = 'grand';
+  pianoSampler = currentInstrument;   // legacy alias
+  applyVolumeToInstrument(grand);
   audioReady = true;
 }
 
+// Smoothly swap the active instrument:
+//   1. releaseAll() on outgoing so we don't get hanging tails.
+//   2. rampTo(-Infinity) on outgoing so the cut is inaudible.
+//   3. Pivot pianoSampler / currentInstrument at the same instant.
+//   4. rampTo(user volume) on the incoming instrument.
+function setInstrument(name) {
+  if (!audioReady) {
+    // Pre-audio change just remembers the choice; initAudio() will pick it up.
+    currentInstrumentName = name;
+    return;
+  }
+  if (name === currentInstrumentName) return;
+  const next = buildInstrument(name);
+  if (!next) return;
+
+  const prev = instruments[currentInstrumentName];
+  if (prev && prev.node) {
+    try { prev.node.releaseAll && prev.node.releaseAll(); } catch (e) {}
+    try { prev.node.volume.rampTo(-Infinity, 0.05); } catch (e) {}
+  }
+  currentInstrument     = next.node;
+  currentInstrumentName = name;
+  pianoSampler          = currentInstrument;   // keep legacy alias in sync
+  // Start the new instrument silent then ramp up — prevents pop/click as the
+  // audio graph re-routes between sample-based and synth-based engines.
+  try { next.node.volume.value = -Infinity; } catch (e) {}
+  applyVolumeToInstrument(next);
+}
+
+// Re-apply the mute state to the *currently active* instrument so the toggle
+// takes effect instantly without waiting for the next note.
+function applyMuteState() {
+  if (!audioReady) return;
+  const inst = instruments[currentInstrumentName];
+  if (muteWebAudio && inst && inst.node) {
+    try { inst.node.releaseAll && inst.node.releaseAll(); } catch (e) {}
+  }
+  applyVolumeToInstrument(inst);
+}
+
 function playNote(midi, velocity = 0.8, durationSec = 0.5) {
-  if (!audioReady || !pianoSampler) return;
+  // Hardware pass-through: auto-playback (Normal mode song / recording replay)
+  // always routes Note-On/Off down the MIDI wire so the digital piano can
+  // voice the song through its onboard sound engine.
+  sendHardwareNoteOn(midi, velocity);
+  sendHardwareNoteOffLater(midi, durationSec * 1000);
+
+  if (muteWebAudio) return;
+  if (!audioReady || !currentInstrument) return;
   try {
     const n = Tone.Frequency(midi, "midi").toNote();
-    pianoSampler.triggerAttackRelease(n, durationSec, undefined, Math.max(0.05, Math.min(1, velocity)));
+    currentInstrument.triggerAttackRelease(
+      n, durationSec, undefined, Math.max(0.05, Math.min(1, velocity))
+    );
   } catch (e) { /* ignore */ }
 }
 function attackNote(midi, velocity = 0.8) {
-  if (!audioReady || !pianoSampler) return;
+  // attackNote/releaseNote fire on *user* input (physical MIDI key / on-screen
+  // touch). We deliberately do NOT echo those back to the hardware out: the
+  // physical piano already voiced them locally, and echoing would create a
+  // feedback loop / double-trigger on the same key.
+  if (muteWebAudio) return;
+  if (!audioReady || !currentInstrument) return;
   try {
     const n = Tone.Frequency(midi, "midi").toNote();
-    pianoSampler.triggerAttack(n, undefined, Math.max(0.05, Math.min(1, velocity)));
+    currentInstrument.triggerAttack(n, undefined, Math.max(0.05, Math.min(1, velocity)));
   } catch (e) {}
 }
 function releaseNote(midi) {
-  if (!audioReady || !pianoSampler) return;
+  if (!audioReady || !currentInstrument) return;
   try {
     const n = Tone.Frequency(midi, "midi").toNote();
-    pianoSampler.triggerRelease(n);
+    currentInstrument.triggerRelease(n);
   } catch (e) {}
 }
 
 // ---------- Web MIDI ----------
 const midiStatusEl = document.getElementById('midiStatus');
 const midiStatusTextEl = document.getElementById('midiStatusText');
+
+// Hardware MIDI outputs discovered via the Web MIDI API. We keep them in a
+// flat array so the hot-path send helpers stay branch-free.
+let midiOutputs = [];
+// Pending hardware Note-Off timers — keyed by midi so we can cancel them on
+// scrub / restart / song-end and avoid leaving the physical piano hanging.
+const pendingHardwareOffs = new Map();
+
+function sendHardwareNoteOn(midi, velocity = 0.8) {
+  if (!midiOutputs.length) return;
+  const v = Math.max(1, Math.min(127, Math.round(velocity * 127)));
+  const msg = [0x90, midi & 0x7f, v];
+  for (const out of midiOutputs) {
+    try { out.send(msg); } catch (e) { /* device went away */ }
+  }
+}
+function sendHardwareNoteOff(midi) {
+  if (!midiOutputs.length) {
+    const t = pendingHardwareOffs.get(midi);
+    if (t) { clearTimeout(t); pendingHardwareOffs.delete(midi); }
+    return;
+  }
+  const msg = [0x80, midi & 0x7f, 0];
+  for (const out of midiOutputs) {
+    try { out.send(msg); } catch (e) {}
+  }
+  const t = pendingHardwareOffs.get(midi);
+  if (t) { clearTimeout(t); pendingHardwareOffs.delete(midi); }
+}
+function sendHardwareNoteOffLater(midi, ms) {
+  if (!midiOutputs.length) return;
+  // Cancel any previously-scheduled off for the same midi so we don't double-fire.
+  const existing = pendingHardwareOffs.get(midi);
+  if (existing) clearTimeout(existing);
+  const t = setTimeout(() => {
+    sendHardwareNoteOff(midi);
+    pendingHardwareOffs.delete(midi);
+  }, Math.max(40, ms));
+  pendingHardwareOffs.set(midi, t);
+}
+// Cancel every pending hardware-off and send an All-Notes-Off blast. Called on
+// scrub / restart / song-end so the hardware piano never ends up holding a
+// note when we jump the playhead.
+function allHardwareNotesOff() {
+  for (const t of pendingHardwareOffs.values()) clearTimeout(t);
+  pendingHardwareOffs.clear();
+  if (!midiOutputs.length) return;
+  for (const out of midiOutputs) {
+    try {
+      // CC 123 (All Notes Off) on all 16 channels, plus a safety sweep of
+      // explicit Note-Off messages across the 88-key range on channel 1 for
+      // hardware that ignores CC 123 in local-keyboard mode.
+      for (let ch = 0; ch < 16; ch++) out.send([0xB0 | ch, 123, 0]);
+      for (let m = FIRST_MIDI; m <= LAST_MIDI; m++) out.send([0x80, m, 0]);
+    } catch (e) { /* ignore */ }
+  }
+}
 
 async function initMIDI() {
   if (!navigator.requestMIDIAccess) {
@@ -811,14 +1164,23 @@ async function initMIDI() {
   try {
     const access = await navigator.requestMIDIAccess({ sysex: false });
     const update = () => {
-      let count = 0;
+      let inCount = 0;
       for (const input of access.inputs.values()) {
         input.onmidimessage = onMIDIMessage;
-        count++;
+        inCount++;
       }
-      if (count > 0) {
+      // Re-scan outputs each time so hot-plug works (USB-MIDI piano connected
+      // mid-session, Bluetooth device pairing, OS-level driver reload, etc.).
+      midiOutputs = [];
+      for (const output of access.outputs.values()) {
+        midiOutputs.push(output);
+      }
+      if (inCount > 0 || midiOutputs.length > 0) {
         midiStatusEl.classList.add('ok'); midiStatusEl.classList.remove('warn');
-        midiStatusTextEl.textContent = count + ' MIDI device' + (count>1?'s':'');
+        const parts = [];
+        if (inCount > 0)            parts.push(inCount + ' in');
+        if (midiOutputs.length > 0) parts.push(midiOutputs.length + ' out');
+        midiStatusTextEl.textContent = 'MIDI: ' + parts.join(' · ');
       } else {
         midiStatusEl.classList.remove('ok'); midiStatusEl.classList.add('warn');
         midiStatusTextEl.textContent = 'No MIDI device';
@@ -1136,9 +1498,13 @@ function scrubToTime(newTime) {
     }
   }
   // Release any sustained audio so we don't get hung notes after a jump.
-  if (audioReady && pianoSampler) {
-    try { pianoSampler.releaseAll(); } catch (e) { /* ignore */ }
+  if (audioReady && currentInstrument) {
+    try { currentInstrument.releaseAll && currentInstrument.releaseAll(); }
+    catch (e) { /* ignore */ }
   }
+  // And kill any in-flight hardware notes so the physical piano doesn't get
+  // stuck holding a key after the playhead jumps.
+  allHardwareNotesOff();
   state.lastFrameTs = performance.now();
 }
 
@@ -1166,7 +1532,9 @@ speedSlider.addEventListener('input', () => {
 volSlider.addEventListener('input', () => {
   state.volume = parseInt(volSlider.value, 10) / 100;
   volVal.textContent = volSlider.value + '%';
-  if (pianoSampler) pianoSampler.volume.value = Tone.gainToDb(Math.max(0.0001, state.volume));
+  // Route through the shared helper so the mute state is always respected and
+  // we never click/pop on rapid slider drags.
+  applyVolumeToInstrument(instruments[currentInstrumentName]);
 });
 
 function setMode(m) {
@@ -1233,7 +1601,11 @@ function restartCurrentSong() {
   setScore(0);
   state.songEnded = false;
   hideVictoryOverlay();
-  if (audioReady && pianoSampler) { try { pianoSampler.releaseAll(); } catch(e) {} }
+  if (audioReady && currentInstrument) {
+    try { currentInstrument.releaseAll && currentInstrument.releaseAll(); } catch(e) {}
+  }
+  // Kill any lingering hardware notes from the previous run before we restart.
+  allHardwareNotesOff();
   setPlaying(true);
 }
 rewindBtn.addEventListener('click', () => {
@@ -1392,6 +1764,39 @@ function showVictoryOverlay() {
   }
 
   victoryOverlay.classList.remove('hidden');
+}
+
+// ---------- Sound Engine UI (Instrument Voice + Mute Web Audio) ----------
+const instrumentSelect   = document.getElementById('instrumentSelect');
+const instrumentVal      = document.getElementById('instrumentVal');
+const muteWebAudioToggle = document.getElementById('muteWebAudioToggle');
+
+function labelForInstrument(name) {
+  switch (name) {
+    case 'grand':   return 'Grand Piano';
+    case 'cyber':   return 'Cyber Synth';
+    case 'arcade':  return '8-Bit Arcade';
+    case 'strings': return 'Ambient Strings';
+    default:        return name;
+  }
+}
+if (instrumentSelect) {
+  instrumentSelect.addEventListener('change', async () => {
+    // Audio might not have been initialized yet if the user opens the panel
+    // before tapping Start. Lazily boot it so the change takes effect now.
+    if (!audioReady) {
+      try { await initAudio(); } catch (e) {}
+    }
+    const name = instrumentSelect.value;
+    setInstrument(name);
+    if (instrumentVal) instrumentVal.textContent = labelForInstrument(name);
+  });
+}
+if (muteWebAudioToggle) {
+  muteWebAudioToggle.addEventListener('change', () => {
+    muteWebAudio = !!muteWebAudioToggle.checked;
+    applyMuteState();
+  });
 }
 
 panelToggleBtn.addEventListener('click', () => panel.classList.toggle('collapsed'));
@@ -1573,6 +1978,8 @@ function update(dtMs) {
   if (state.songDuration > 0 && state.songTime >= state.songDuration) {
     if (!state.songEnded) {
       state.songEnded = true;
+      // Ensure no hardware notes are left hanging when the song wraps up.
+      allHardwareNotesOff();
       showVictoryOverlay();   // showVictoryOverlay() also pauses transport
     } else {
       setPlaying(false);
@@ -1963,6 +2370,8 @@ document.addEventListener('visibilitychange', () => {
 });
 
 </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
