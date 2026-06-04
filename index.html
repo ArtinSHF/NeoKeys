@@ -326,6 +326,79 @@
     border: 2px solid var(--accent);
   }
 
+  /* ---------- A-B Loop button (sits beneath the timeline scrubber) ---------- */
+  .loop-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 8px;
+  }
+  .loop-btn {
+    flex: 0 0 auto;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: var(--text);
+    padding: 7px 12px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.18s ease;
+    display: inline-flex; align-items: center; gap: 6px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+  }
+  .loop-btn::before {
+    content: "";
+    width: 8px; height: 8px; border-radius: 50%;
+    background: rgba(255,255,255,0.35);
+    box-shadow: 0 0 6px rgba(255,255,255,0.2);
+    transition: background 0.18s ease, box-shadow 0.18s ease;
+  }
+  .loop-btn:hover {
+    border-color: rgba(124,92,255,0.55);
+    box-shadow: 0 0 0 1px rgba(124,92,255,0.25), 0 4px 12px rgba(124,92,255,0.18);
+  }
+  .loop-btn.set-start {
+    background: linear-gradient(135deg, rgba(255,61,166,0.20), rgba(255,61,166,0.08));
+    border-color: rgba(255,61,166,0.55);
+    color: #ffdfee;
+    box-shadow: 0 0 0 1px rgba(255,61,166,0.30), 0 0 14px rgba(255,61,166,0.30);
+  }
+  .loop-btn.set-start::before {
+    background: var(--rh);
+    box-shadow: 0 0 10px var(--rh-glow);
+  }
+  .loop-btn.looping {
+    background: linear-gradient(135deg, rgba(54,224,127,0.22), rgba(54,224,127,0.08));
+    border-color: rgba(54,224,127,0.55);
+    color: #d6ffe6;
+    box-shadow: 0 0 0 1px rgba(54,224,127,0.32), 0 0 14px rgba(54,224,127,0.30);
+    animation: loopPulse 1.6s ease-in-out infinite;
+  }
+  .loop-btn.looping::before {
+    background: var(--good);
+    box-shadow: 0 0 10px rgba(54,224,127,0.7);
+  }
+  @keyframes loopPulse {
+    0%, 100% { box-shadow: 0 0 0 1px rgba(54,224,127,0.32), 0 0 14px rgba(54,224,127,0.30); }
+    50%      { box-shadow: 0 0 0 1px rgba(54,224,127,0.55), 0 0 22px rgba(54,224,127,0.55); }
+  }
+  .loop-display {
+    flex: 1;
+    font-size: 10px;
+    color: var(--text-dim);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    line-height: 1.3;
+  }
+  .loop-display b {
+    color: var(--text);
+    font-weight: 700;
+  }
+
   /* ---------- Toggle Panel Button ---------- */
   .toggle-panel {
     position: absolute;
@@ -898,6 +971,36 @@
         <span class="slider-track"></span>
       </label>
     </div>
+    <div class="toggle-row" style="margin-top:6px;">
+      <span class="toggle-label">
+        Mute Left Hand Audio
+        <span class="hint">Silence LH track audio · blocks &amp; scoring still active</span>
+      </span>
+      <label class="switch">
+        <input type="checkbox" id="muteLeftHandToggle" />
+        <span class="slider-track"></span>
+      </label>
+    </div>
+    <div class="toggle-row" style="margin-top:6px;">
+      <span class="toggle-label">
+        Mute Right Hand Audio
+        <span class="hint">Silence RH track audio · blocks &amp; scoring still active</span>
+      </span>
+      <label class="switch">
+        <input type="checkbox" id="muteRightHandToggle" />
+        <span class="slider-track"></span>
+      </label>
+    </div>
+    <div class="toggle-row" style="margin-top:6px;">
+      <span class="toggle-label">
+        Web Audio Only
+        <span class="hint">Play through web speakers only · skip hardware piano output</span>
+      </span>
+      <label class="switch">
+        <input type="checkbox" id="webAudioOnlyToggle" />
+        <span class="slider-track"></span>
+      </label>
+    </div>
 
     <h3 style="margin-top:10px;">Note Naming</h3>
     <div class="row">
@@ -909,6 +1012,10 @@
     <div class="timeline-wrap">
       <label>Position <span class="val" id="timelineVal">0:00 / 0:00</span></label>
       <input type="range" id="timelineSlider" min="0" max="1000" step="1" value="0" />
+      <div class="loop-row">
+        <button class="loop-btn" id="loopBtn" type="button" title="Set A → set B → loop · click again to clear">A-B Loop</button>
+        <span class="loop-display" id="loopDisplay">Off</span>
+      </div>
     </div>
 
     <h3 style="margin-top:10px;">Hand Split Threshold</h3>
@@ -1167,6 +1274,25 @@ const state = {
     wrongNotes:    0,    // tally of awardMiss() events during the run
     maxScore:      0,    // notesExpected * 100
   },
+
+  // ---- A-B Loop (Upgrade 1) ----
+  // Three-state machine driven by the [A-B Loop] button beneath the scrubber:
+  //   'off'       → no markers, no looping. First click captures A.
+  //   'set-start' → loopStart captured at click time. Second click captures B
+  //                  and flips to 'looping'.
+  //   'looping'   → playhead seamlessly snaps loopStart whenever it crosses
+  //                  loopEnd. Third click wipes both markers → 'off'.
+  loopMode:  'off',
+  loopStart: 0,     // ms — Marker A
+  loopEnd:   0,     // ms — Marker B
+
+  // ---- Independent left/right hand audio mute (Upgrade 4) ----
+  // When true, the corresponding hand's notes are still drawn as falling
+  // blocks and still feed practice scoring, but their automated playback skips
+  // both the web-audio synth and the hardware MIDI out.
+  muteLeftHand:  false,
+  muteRightHand: false,
+
 };
 
 // Look-ahead time (ms) for waterfall (how far above the hit line we render).
@@ -1185,6 +1311,7 @@ let currentInstrumentName = 'grand';
 let pianoSampler          = null;  // legacy alias → currentInstrument
 let audioReady            = false;
 let muteWebAudio          = false; // when true, the web audio synth is silent
+let webAudioOnly          = false; // when true, automated playback skips the hardware MIDI out and is voiced only through the web synth
 
 // Cache of constructed instruments. Each entry: { node, fx: [extra Tone nodes] }.
 const instruments = {};
@@ -1320,10 +1447,13 @@ function applyMuteState() {
 
 function playNote(midi, velocity = 0.8, durationSec = 0.5) {
   // Hardware pass-through: auto-playback (Normal mode song / recording replay)
-  // always routes Note-On/Off down the MIDI wire so the digital piano can
-  // voice the song through its onboard sound engine.
-  sendHardwareNoteOn(midi, velocity);
-  sendHardwareNoteOffLater(midi, durationSec * 1000);
+  // routes Note-On/Off down the MIDI wire so the digital piano can voice the
+  // song through its onboard sound engine — unless the user has opted into
+  // "Web Audio Only", in which case we keep sound on the web speakers only.
+  if (!webAudioOnly) {
+    sendHardwareNoteOn(midi, velocity);
+    sendHardwareNoteOffLater(midi, durationSec * 1000);
+  }
 
   if (muteWebAudio) return;
   if (!audioReady || !currentInstrument) return;
@@ -1458,14 +1588,14 @@ function onMIDIMessage(e) {
   const [status, d1, d2] = e.data;
   const cmd = status & 0xf0;
   if (cmd === 0x90 && d2 > 0) {
-    // Note on
-    handleUserNoteOn(d1, d2 / 127);
+    // Note on — flag the event as coming from physical Web-MIDI input.
+    handleUserNoteOn(d1, d2 / 127, true);
   } else if (cmd === 0x80 || (cmd === 0x90 && d2 === 0)) {
-    handleUserNoteOff(d1);
+    handleUserNoteOff(d1, true);
   }
 }
 
-function handleUserNoteOn(midi, velocity) {
+function handleUserNoteOn(midi, velocity, fromMidi) {
   state.activeMidiPressed.add(midi);
   attackNote(midi, velocity);
 
@@ -1509,7 +1639,7 @@ function handleUserNoteOn(midi, velocity) {
     awardMiss(midi);
   }
 }
-function handleUserNoteOff(midi) {
+function handleUserNoteOff(midi, fromMidi) {
   state.activeMidiPressed.delete(midi);
   releaseNote(midi);
 
@@ -1583,14 +1713,19 @@ function resetPracticeStats() {
 function spawnFloater(text, midi, color) {
   const key = getKey(midi);
   if (!key) return;
+  // Upgrade 2 — Smooth linear floating-text animation. The previous values
+  // (vy=-0.6, maxLife=900) combined with a font-size easing curve created a
+  // jarring "pop and bounce" effect during fast runs. We now drift the text
+  // straight up at a calm constant velocity over a tight 600 ms lifespan and
+  // the renderer fades opacity linearly from 1.0 → 0.0 across that window.
   state.floaters.push({
     text,
     color,
     x: key.x + key.w / 2,
     y: pianoY - 6,
-    vy: -0.6,                  // px / ms upward
+    vy: -0.06,                 // px / ms — gentle constant upward drift
     life: 0,
-    maxLife: 900,              // ms
+    maxLife: 600,              // ms — clean, elegant fade-out window
   });
 }
 
@@ -2356,6 +2491,109 @@ if (muteWebAudioToggle) {
   });
 }
 
+// ---------- Independent L/R hand audio mute wiring (Upgrade 4) ----------
+const muteLeftHandToggle  = document.getElementById('muteLeftHandToggle');
+const muteRightHandToggle = document.getElementById('muteRightHandToggle');
+if (muteLeftHandToggle) {
+  muteLeftHandToggle.addEventListener('change', () => {
+    state.muteLeftHand = !!muteLeftHandToggle.checked;
+    // If the mute flips ON mid-song, kill any LH voices already ringing so we
+    // don't leak a tail across the transition. We don't have per-hand voice
+    // tracking, so the simplest correct move is to releaseAll on the current
+    // instrument; the other hand will re-attack on its next scheduled note.
+    if (state.muteLeftHand && audioReady && currentInstrument) {
+      try { currentInstrument.releaseAll && currentInstrument.releaseAll(); }
+      catch (e) {}
+      allHardwareNotesOff();
+    }
+  });
+}
+if (muteRightHandToggle) {
+  muteRightHandToggle.addEventListener('change', () => {
+    state.muteRightHand = !!muteRightHandToggle.checked;
+    if (state.muteRightHand && audioReady && currentInstrument) {
+      try { currentInstrument.releaseAll && currentInstrument.releaseAll(); }
+      catch (e) {}
+      allHardwareNotesOff();
+    }
+  });
+}
+
+// ---------- Web Audio Only wiring ----------
+const webAudioOnlyToggle = document.getElementById('webAudioOnlyToggle');
+if (webAudioOnlyToggle) {
+  webAudioOnlyToggle.addEventListener('change', () => {
+    webAudioOnly = !!webAudioOnlyToggle.checked;
+    // If we just flipped ON, blast All-Notes-Off down the MIDI wire so the
+    // hardware piano doesn't hold any voices we previously triggered.
+    if (webAudioOnly) {
+      allHardwareNotesOff();
+    }
+  });
+}
+
+// ---------- A-B Loop wiring (Upgrade 1) ----------
+const loopBtn     = document.getElementById('loopBtn');
+const loopDisplay = document.getElementById('loopDisplay');
+
+function updateLoopUI() {
+  if (!loopBtn) return;
+  loopBtn.classList.remove('set-start', 'looping');
+  if (state.loopMode === 'set-start') {
+    loopBtn.classList.add('set-start');
+    loopBtn.textContent = 'Set B';
+  } else if (state.loopMode === 'looping') {
+    loopBtn.classList.add('looping');
+    loopBtn.textContent = 'Loop ON · Clear';
+  } else {
+    loopBtn.textContent = 'A-B Loop';
+  }
+  if (loopDisplay) {
+    if (state.loopMode === 'set-start') {
+      loopDisplay.innerHTML = '<b>A</b> ' + formatTime(state.loopStart) + ' &nbsp;·&nbsp; B …';
+    } else if (state.loopMode === 'looping') {
+      loopDisplay.innerHTML =
+        '<b>A</b> ' + formatTime(state.loopStart) +
+        ' &nbsp;→&nbsp; <b>B</b> ' + formatTime(state.loopEnd);
+    } else {
+      loopDisplay.textContent = 'Off';
+    }
+  }
+}
+
+function cycleLoopState() {
+  // Three-state machine: off → set-start → looping → off
+  if (state.loopMode === 'off') {
+    state.loopStart = state.songTime;
+    state.loopEnd   = 0;
+    state.loopMode  = 'set-start';
+    showToast('Loop A set at ' + formatTime(state.loopStart), 'ok');
+  } else if (state.loopMode === 'set-start') {
+    const candidate = state.songTime;
+    if (candidate <= state.loopStart + 50) {
+      // Refuse a degenerate / inverted range — the user has not advanced past A.
+      showToast('Move playhead past A before setting B');
+      return;
+    }
+    state.loopEnd  = candidate;
+    state.loopMode = 'looping';
+    showToast('A-B Loop active · ' +
+      formatTime(state.loopStart) + ' → ' + formatTime(state.loopEnd), 'ok');
+  } else {
+    state.loopMode  = 'off';
+    state.loopStart = 0;
+    state.loopEnd   = 0;
+    showToast('A-B Loop cleared');
+  }
+  updateLoopUI();
+}
+
+if (loopBtn) {
+  loopBtn.addEventListener('click', cycleLoopState);
+  // Initialise the label/state on boot.
+  updateLoopUI();
+}
+
 panelToggleBtn.addEventListener('click', () => panel.classList.toggle('collapsed'));
 
 
@@ -2448,17 +2686,17 @@ canvas.addEventListener('pointerdown', (e) => {
   const m = midiAtPoint(e.clientX, e.clientY);
   if (m != null) {
     touchActive.set(e.pointerId, m);
-    handleUserNoteOn(m, 0.8);
+    handleUserNoteOn(m, 0.8, false);
     canvas.setPointerCapture(e.pointerId);
   }
 });
 canvas.addEventListener('pointerup', (e) => {
   const m = touchActive.get(e.pointerId);
-  if (m != null) { handleUserNoteOff(m); touchActive.delete(e.pointerId); }
+  if (m != null) { handleUserNoteOff(m, false); touchActive.delete(e.pointerId); }
 });
 canvas.addEventListener('pointercancel', (e) => {
   const m = touchActive.get(e.pointerId);
-  if (m != null) { handleUserNoteOff(m); touchActive.delete(e.pointerId); }
+  if (m != null) { handleUserNoteOff(m, false); touchActive.delete(e.pointerId); }
 });
 
 // ---------- Game Loop ----------
@@ -2579,7 +2817,14 @@ function update(dtMs) {
     if (!n.triggered && n.startMs <= nextTime) {
       // In practice mode, wait-relevant notes are user-played, others auto-play.
       const userPlays = state.mode === 'practice' && shouldPauseForHand(n.hand);
-      if (!userPlays) {
+      // Upgrade 4 — Independent left/right hand audio mute. The note's visual
+      // falling block and any practice-mode scoring/wait bookkeeping are
+      // already wired up above; we only gate the *audio* generation here so
+      // the canvas continues to render the silenced hand's blocks normally.
+      const handMuted =
+        (n.hand === 'lh' && state.muteLeftHand) ||
+        (n.hand === 'rh' && state.muteRightHand);
+      if (!userPlays && !handMuted) {
         playNote(n.midi, n.velocity, Math.max(0.1, n.durMs / 1000));
       }
       n.triggered = true;
@@ -2587,6 +2832,19 @@ function update(dtMs) {
   }
 
   state.songTime = Math.min(nextTime, state.songDuration || nextTime);
+
+  // ---- Upgrade 1 — A-B Loop playback enforcement ----
+  // Runs every frame while looping is armed. The moment the playhead reaches
+  // or crosses Marker B we seamlessly snap back to Marker A via scrubToTime()
+  // so all note triggers, hardware-out events and held audio voices are
+  // properly reset (no hung notes on the loop seam).
+  if (state.loopMode === 'looping'
+      && state.loopEnd > state.loopStart
+      && state.songTime >= state.loopEnd) {
+    scrubToTime(state.loopStart);
+    return;
+  }
+
   if (state.songDuration > 0 && state.songTime >= state.songDuration) {
     if (!state.songEnded) {
       state.songEnded = true;
@@ -2681,14 +2939,17 @@ function drawFreeplayBlocks() {
 }
 
 function drawFloaters() {
-  // Brief +100 / -50 popups that float up above the struck key.
+  // Upgrade 2 — Smooth linear floating-text animation.
+  //   • Font size is now FIXED so glyphs don't scale/pop on spawn.
+  //   • Vertical motion is purely linear (driven by f.vy in update()).
+  //   • Opacity interpolates straight from 1.0 → 0.0 across f.maxLife (600 ms)
+  //     for a clean, elegant fade-out instead of an abrupt visual snap.
   for (const f of state.floaters) {
-    const p = f.life / f.maxLife;          // 0 → 1
-    const alpha = 1 - p;
-    const fontSize = 18 + (1 - p) * 4;
+    const p = Math.max(0, Math.min(1, f.life / f.maxLife));   // 0 → 1
+    const alpha = 1 - p;                                       // linear fade
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.font = '800 ' + fontSize + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = '800 19px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.shadowColor = f.color;
@@ -2900,7 +3161,13 @@ function drawPiano() {
         // Single-letter labels can use a higher ratio.
         fontSize = Math.max(7, Math.min(12, whiteKeyW * 0.5));
       }
-      ctx.fillStyle = litInfo ? 'rgba(0,0,0,0.75)' : (isC ? '#7c5cff' : '#8a90b3');
+      // Upgrade 3 — Outlined high-contrast key labels.
+      // The previous renderer flipped between dark/light fill depending on key
+      // press state, which produced a strobing/flicker effect during rapid
+      // playback on mobile. We now lock the fill to a permanent light tone
+      // and add a 3 px black stroke beneath the fill so the text stays legible
+      // against ANY background (cool unpressed white key, glowing neon-pink RH
+      // splash, neon-cyan LH splash, white-flash waiting key, etc.).
       ctx.font = (isC ? 'bold ' : '600 ') + fontSize + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
@@ -2908,7 +3175,15 @@ function drawPiano() {
       // Bottom padding scales with piano height so it doesn't get cut off in
       // short landscape views on phones.
       const pad = Math.max(3, Math.min(8, pianoH * 0.05));
-      ctx.fillText(label, k.x + k.w / 2, pianoY + pianoH - pad);
+      const labelX = k.x + k.w / 2;
+      const labelY = pianoY + pianoH - pad;
+      ctx.lineJoin = 'round';
+      ctx.miterLimit = 2;
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 3;
+      ctx.strokeText(label, labelX, labelY);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(label, labelX, labelY);
     }
   }
 
@@ -2939,13 +3214,24 @@ function drawPiano() {
 
     // Label for black keys — lowered threshold so labels stay visible in mobile
     // landscape. Font scales with the (narrower) black-key width.
+    // Upgrade 3 — Outlined high-contrast key labels. Identical strategy as the
+    // white-key labels: permanent white fill + 3 px black stroke. Eliminates
+    // the eye-straining strobe that used to happen when a black key fired.
     if (blackKeyW >= 8) {
       const fontSize = Math.max(6, Math.min(10, blackKeyW * 0.55));
-      ctx.fillStyle = litInfo ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.55)';
       ctx.font = '600 ' + fontSize + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
-      ctx.fillText(noteLetter(k.midi), k.x + k.w / 2, pianoY + blackKeyH - 3);
+      const bkLabel = noteLetter(k.midi);
+      const bkX = k.x + k.w / 2;
+      const bkY = pianoY + blackKeyH - 3;
+      ctx.lineJoin = 'round';
+      ctx.miterLimit = 2;
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 3;
+      ctx.strokeText(bkLabel, bkX, bkY);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(bkLabel, bkX, bkY);
     }
   }
 
@@ -3013,6 +3299,8 @@ document.addEventListener('visibilitychange', () => {
 });
 
 </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
