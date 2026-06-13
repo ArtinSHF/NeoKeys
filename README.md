@@ -1,6 +1,8 @@
 # NeoKeys 🎹
 
-![NeoKeys Full Application Screenshot](Screenshots/Screenshot.png)
+<img width="1861" height="927" alt="Screenshot" src="https://github.com/user-attachments/assets/86ffb06a-8490-4da8-8d05-52731d9d6398" />
+
+---
 
 NeoKeys is a web-based MIDI piano trainer and interactive musical workstation featuring falling notes, an inverted arcade Freeplay mode, full session recording, hardware MIDI output pass-through, and a responsive, mobile-friendly interface.
 
