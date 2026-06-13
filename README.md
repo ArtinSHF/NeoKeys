@@ -1,6 +1,6 @@
 # NeoKeys 🎹
 
-<img width="5760" height="2160" alt="combined-image" src="https://github.com/user-attachments/assets/2f966d03-06a2-4328-9ed1-dfe36efb57f1" />
+<img width="1861" height="927" alt="Screenshot" src="https://github.com/user-attachments/assets/86ffb06a-8490-4da8-8d05-52731d9d6398" />
 
 ---
 
