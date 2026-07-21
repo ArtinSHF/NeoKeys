@@ -30,11 +30,11 @@ It supports local MIDI file loading, a built-in track library, real-time note na
 
 * **88-Key Cyber Piano Bed:** High-fidelity virtual piano with real-time key highlighting.
 * **Bi-Directional Waterfall Animations:**
-
-  * **Standard Mode:** Notes cascade downward toward the hitline.
-  * **Freeplay Mode:** Notes shoot upwards from the piano bed and stop on key release.
+* **Standard Mode:** Notes cascade downward toward the hitline.
+* **Freeplay Mode:** Notes shoot upwards from the piano bed and stop on key release.
 * **Responsive Font Scaling:** Note labels automatically resize to remain readable on mobile landscape screens.
 * **Timeline Scrubbing:** A styled neon range slider lets users jump to any part of a song instantly.
+* **Falling Note Labels Toggle:** Display note names (C4, Solfège, or German notation) directly on top of descending notes in Standard Mode, with a quick ON/OFF toggle.
 
 ### Advanced Audio & Hardware Systems
 
@@ -49,11 +49,11 @@ It supports local MIDI file loading, a built-in track library, real-time note na
 
 ### Gamified Practice & Learning Tools
 
-* **Built-In Tracks Menu:** Includes a built-in selection menu with pre-loaded classical pieces such as:
-
-  * Beethoven's Moonlight Sonata
-  * Für Elise
-  * Clair de Lune
+* **Expanded Track Library:** Includes pre-loaded classical and beginner-friendly pieces (e.g., *Beethoven's Moonlight Sonata*, *Für Elise*, *Clair de Lune*, *Ode to Joy*, and *Twinkle, Twinkle, Little Star*).
+* **Multi-Notation Support (Internationalization):** Switch seamlessly between:
+  * **English Notation:** C, D, E, F, G, A, B
+  * **French Solfège:** Do, Ré, Mi, Fa, Sol, La, Si
+  * **European / German Notation:** A, B♭→B, B→H, C, D, E, F, G
 * **Intelligent Practice Mode:** The waterfall pauses automatically until the correct key is pressed.
 * **Fast-Playing Patch:** Uses active key scanning to prevent lock-ups during rapid runs, trills, and arpeggios.
 * **Smart Hand-Splitting Heuristics:** Detects left/right hand tracks from MIDI channels or calculates a median pitch split.
@@ -99,6 +99,18 @@ The site should open in your browser at:
 ```text
 http://127.0.0.1:5500/index.html
 ```
+
+---
+
+## ⌨️ Keyboard Navigation Shortcuts
+
+Navigate and control track playback without taking your hands off the keyboard:
+
+| Shortcut | Action |
+| :--- | :--- |
+| <kbd>Spacebar</kbd> | Play / Pause active track |
+| <kbd>Left Arrow (←)</kbd> | Rewind timeline (5 seconds) |
+| <kbd>Right Arrow (→)</kbd> | Fast-forward timeline (5 seconds) |
 
 ---
 
