@@ -1,70 +1,82 @@
-# 🕯️ Cozy Studio
+# NeoKeys 🎹
+
+<img width="1861" height="927" alt="Screenshot" src="https://github.com/user-attachments/assets/86ffb06a-8490-4da8-8d05-52731d9d6398" />
 
 ---
 
-Cozy Studio is a web-based lofi focus timer that combines a Pomodoro-style productivity system with ambient soundscapes, animated cozy atmospheres, a task list, and daily streaks.
+NeoKeys is a web-based MIDI piano trainer and interactive musical workstation featuring falling notes, an inverted arcade Freeplay mode, full session recording, hardware MIDI output pass-through, and a responsive, mobile-friendly interface.
 
-The project is inspired by ambient "study with me" and lofi timer apps, built as a personal experiment in canvas animation, layered Web Audio playback, local persistence, and building a fully self-contained, single-file front-end tool.
+The project is inspired by desktop piano learning applications, built as a personal experiment to learn advanced frontend engineering, browser-based hardware communication, audio synthesis, dynamic canvas rendering, and complex game-state architecture.
 
 ## 🌐 Live Website
 
-Cozy Studio runs online using Vercel.
+NeoKeys runs online using Vercel.
 
-**Live site:** *(add your Vercel URL here)*
+**Live site:** https://neo-keys.vercel.app
 
 ## 🎮 About the Project
 
-Cozy Studio renders a warm, glassmorphic focus timer at the center of the screen, backed by a full-screen animated canvas atmosphere.
+NeoKeys renders a responsive 88-key piano at the bottom of the screen with a high-performance cyber-neon visualizer grid.
 
-The application is a full session companion: it tracks focus/break intervals with customizable durations, layers ambient soundscapes and lofi songs simultaneously, keeps a running daily streak of completed sessions, and manages a lightweight task list — all persisted locally so your setup is remembered on return visits.
+The application is a full duplex audio tool: it captures incoming physical or wireless MIDI keyboard inputs via the Web MIDI API and can route auto-play data back out into a physical piano's sound engine.
+
+It supports local MIDI file loading, a built-in track library, real-time note name translation, standalone session recording, and downloadable MIDI exports.
 
 ---
 
 ## 🚀 Features
 
-### Core Timer & Visual Engine
+### Core Visualizer & Rendering Engine
 
-* **Circular Progress Ring Timer:** SVG ring animates smoothly around a large tabular-number clock display.
-* **Focus / Break Presets:** Quick-select chips for Short Break, Long Break, Focus, and Deep Work sessions.
-* **Fully Custom Durations:** Set custom minute values for any session type directly from Settings.
-* **Auto-Start Breaks:** Optional toggle to automatically transition from a finished focus session into a break.
-* **10 Animated Atmospheres:** Switch the full-screen canvas background between Particle Dust, Rain on Glass, Aurora Glow, Embers, Starry Night, Autumn Leaves, Bokeh Blur, Foggy Window, Sunbeams, and Snowfall.
-* **Reduced-Motion Aware:** Respects the browser's `prefers-reduced-motion` setting.
+* **88-Key Cyber Piano Bed:** High-fidelity virtual piano with real-time key highlighting.
+* **Bi-Directional Waterfall Animations:**
+* **Standard Mode:** Notes cascade downward toward the hitline.
+* **Freeplay Mode:** Notes shoot upwards from the piano bed and stop on key release.
+* **Responsive Font Scaling:** Note labels automatically resize to remain readable on mobile landscape screens.
+* **Timeline Scrubbing:** A styled neon range slider lets users jump to any part of a song instantly.
+* **Falling Note Labels Toggle:** Display note names (C4, Solfège, or German notation) directly on top of descending notes in Standard Mode, with a quick ON/OFF toggle.
 
-### Ambient Sound & Music System
+### Advanced Audio & Hardware Systems
 
-* **Dual-Layer Audio:** Play an ambient soundscape and a lofi song simultaneously for a layered cozy effect.
-* **10 Ambient Soundscapes:** Includes real field recordings (Rain, Fireplace Crackle, Coffee Shop, Ocean Waves, Night Crickets, Wind Chimes, Quiet Library) alongside in-browser synthesized loops (Forest Birds, Vinyl Crackle, Stream Water) that never buffer or break.
-* **10 Royalty-Free Lofi Tracks:** Streamed directly from the Internet Archive for uninterrupted background music.
-* **Independent Volume Controls:** Separate volume sliders for ambience and songs, both on the main panel and in Settings.
-* **Now-Playing Indicators:** Pulsing status dots show which layer is actively playing.
+* **Multi-Instrument Sound Selector:** Swap between 4 custom Tone.js audio engines:
 
-### Gamified Productivity Tools
+  * Grand Piano
+  * Cyber Synth
+  * 8-Bit Arcade
+  * Ambient Strings
+* **Hardware MIDI Output Pass-Through:** Sends MIDI Note On/Off commands back to a digital keyboard, allowing auto-playing tracks to play through the keyboard's physical speakers.
+* **Hardware Synth Muter:** A toggle to silence browser audio when using a real piano's internal sound engine.
 
-* **Daily Streak Counter:** Tracks completed focus sessions for the current day, with a running best-day record.
-* **Focus Task List:** Add, complete, and delete lightweight daily tasks with animated check-off states.
-* **Rotating Cozy Notes:** A daily-rotating quote/affirmation widget with a manual "another note" refresh option.
-* **Chime Alarm System:** Choose between Warm Bell, Soft Marimba, or Wind Chime alarm styles, with adjustable volume and a one-click test button.
-* **Browser Notifications:** Requests permission to notify when a session completes.
+### Gamified Practice & Learning Tools
 
-### Personalization & Settings
+* **Expanded Track Library:** Includes pre-loaded classical and beginner-friendly pieces (e.g., *Beethoven's Moonlight Sonata*, *Für Elise*, *Clair de Lune*, *Ode to Joy*, and *Twinkle, Twinkle, Little Star*).
+* **Multi-Notation Support (Internationalization):** Switch seamlessly between:
+  * **English Notation:** C, D, E, F, G, A, B
+  * **French Solfège:** Do, Ré, Mi, Fa, Sol, La, Si
+  * **European / German Notation:** A, B♭→B, B→H, C, D, E, F, G
+* **Intelligent Practice Mode:** The waterfall pauses automatically until the correct key is pressed.
+* **Fast-Playing Patch:** Uses active key scanning to prevent lock-ups during rapid runs, trills, and arpeggios.
+* **Smart Hand-Splitting Heuristics:** Detects left/right hand tracks from MIDI channels or calculates a median pitch split.
+* **Internationalization Toggle:** Switches note names between English notation and French solfège.
+* **Gamified Scoring Engine:** Tracks player accuracy with timing-based scoring and penalties for wrong notes.
+* **Dynamic Performance Review:** Shows an end-of-song review with score, wrong notes, and feedback.
 
-* **Warm Lighting Intensity:** Adjustable ambient glow/vignette strength.
-* **UI Glass Opacity:** Control how transparent or solid the glassmorphic cards appear.
-* **Clock Font Style:** Switch between monospace and rounded clock typography.
-* **Resume Last Sound:** Optionally auto-resume the last-played ambience on page load.
-* **Persistent Preferences:** All settings, durations, streaks, and tasks are saved locally between sessions.
+### Custom Session Recording & Exporting
+
+* **Freeplay Studio Recording:** Captures live MIDI input while in Freeplay mode, including note values, velocities, timestamps, and durations.
+* **Instant Sandbox Playback:** Converts recordings into playable in-app tracks for instant review.
+* **MIDI File Downloader:** Generates a downloadable `.mid` file from custom recordings using MidiWriterJS.
 
 ---
 
 ## 🛠 Tools & Technologies Used
 
 * **HTML5:** Structure and Canvas API
-* **CSS3:** Custom properties, glassmorphism, and warm cyber-cozy styling
-* **JavaScript:** ES6+, Web Audio API, Canvas animation loops, and local persistence
-* **Web Audio API:** Layered playback, synthesized ambient loops, and chime generation
-* **Google Fonts:** Quicksand & DM Mono
-* **Internet Archive:** Source for royalty-free ambient recordings and lofi tracks
+* **CSS3:** Custom properties and neon cyber styling
+* **JavaScript:** ES6+, async Web MIDI, and state machines
+* **Web MIDI API:** MIDI input/output hardware routing
+* **Tone.js:** Audio synthesis, polyphonic mapping, and samplers
+* **MidiWriterJS:** MIDI file compiling and encoding
 * **VS Code:** Development environment
 * **Vercel:** Deployment
 * **AI Assistance:** Planning, debugging, and optimization
@@ -90,19 +102,36 @@ http://127.0.0.1:5500/index.html
 
 ---
 
-## ⌨️ Keyboard Shortcuts
+## ⌨️ Keyboard Navigation Shortcuts
+
+Navigate and control track playback without taking your hands off the keyboard:
 
 | Shortcut | Action |
 | :--- | :--- |
-| <kbd>Spacebar</kbd> | Start / Pause the timer |
-| <kbd>R</kbd> | Reset the timer |
+| <kbd>Spacebar</kbd> | Play / Pause active track |
+| <kbd>Left Arrow (←)</kbd> | Rewind timeline (5 seconds) |
+| <kbd>Right Arrow (→)</kbd> | Fast-forward timeline (5 seconds) |
+
+---
+
+## 🎹 MIDI Keyboard Support
+
+NeoKeys uses the browser's native Web MIDI API.
+
+For the interactive MIDI features to work properly:
+
+* Use a Web MIDI compatible browser such as Google Chrome, Opera, or Microsoft Edge.
+* Connect your digital piano using USB-MIDI or a wireless MIDI/Bluetooth adapter before launching the page.
+* Grant MIDI permissions when prompted by your browser.
+* To hear playback through your piano, make sure your keyboard's MIDI receive channels are active.
+* Use the **Mute Web Audio Synth** toggle when you want audio to come from your physical keyboard instead of the browser.
 
 ---
 
 ## 📁 Project Structure
 
 ```text
-cozy-studio/
+neokeys/
 │
 ├── index.html        # Main single-file app
 ├── README.md         # Repository documentation
@@ -115,26 +144,27 @@ cozy-studio/
 
 This is an actively maintained experimental portfolio project.
 
-Updates are focused on expanding ambient soundscapes, refining the animated atmospheres, and improving audio reliability across devices.
+Updates are focused on expanding practice mechanics, improving audio latency, refining MIDI hardware support, and optimizing canvas performance across different devices.
 
 ---
 
 ## ⚠️ Note
 
-Cozy Studio is a standalone, independent web application.
+NeoKeys is a standalone, independent web application.
 
-It is a personal development and productivity-design experiment made for educational purposes and to showcase front-end animation, audio engineering, and interactive UI design skills.
+It is a personal development and game-design music training experiment made for educational purposes and to showcase frontend, hardware API, and canvas-rendered audio programming skills.
 
-Cozy Studio is not affiliated with any commercial focus-timer or "study with me" product.
+NeoKeys is not affiliated with Synthesia or any other piano learning software.
 
 ---
 
 ## 🧠 What I Learned
 
-While building Cozy Studio, I gained hands-on experience with:
+While building NeoKeys, I gained hands-on experience with:
 
-* **Layered Web Audio Playback:** Mixing streamed recordings with in-browser synthesized loops without conflicts.
-* **Canvas Atmosphere Rendering:** Building ten distinct animated background systems sharing one render loop.
-* **State Persistence:** Saving timer durations, streaks, tasks, and appearance settings locally between sessions.
-* **Session-Based Gamification:** Designing a streak and task system that reinforces focus habits.
-* **Custom Theming Systems:** Building adjustable warmth, opacity, and font controls driven by CSS custom properties.
+* **Monolithic State Management:** Managing audio, rendering loops, recording, and hardware states inside a single-file app.
+* **Duplex Hardware I/O:** Using browser APIs to receive and send low-level MIDI messages.
+* **Canvas Coordinate Mapping:** Building and adjusting real-time visual math for different note directions and screen sizes.
+* **Asynchronous Audio Systems:** Preventing audio clipping, lag, and interaction issues during playback and user input.
+* **Defensive Algorithmic Engineering:** Solving timing problems caused by fast note sequences and timeline pauses.
+* **Binary File Compilation:** Turning recorded user input into valid downloadable MIDI files directly in the browser.
