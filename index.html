@@ -811,6 +811,59 @@
   .track-item .ti-emoji { font-size: 16px; }
   .track-item .ti-meta { margin-left: auto; font-size: 10px; opacity: 0.6; }
 
+  /* ---------- Tracks tabs + Recent Songs panel ---------- */
+  .tracks-tabs { display: flex; gap: 6px; margin-bottom: 6px; }
+  .tracks-tab {
+    flex: 1; padding: 9px 10px; border-radius: 10px; cursor: pointer;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--text-dim);
+    font-size: 12px; font-weight: 700; letter-spacing: 0.3px;
+    transition: all 0.15s ease;
+  }
+  .tracks-tab:hover { color: var(--text); border-color: rgba(124,92,255,0.4); }
+  .tracks-tab.active {
+    background: linear-gradient(135deg, rgba(0,212,255,0.16), rgba(255,61,166,0.16));
+    color: var(--text);
+    border-color: rgba(124,92,255,0.55);
+    box-shadow: 0 0 0 1px rgba(124,92,255,0.20);
+  }
+  .recent-list { display: flex; flex-direction: column; gap: 6px; }
+  .recent-item {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 9px; padding: 6px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .recent-item.active {
+    border-color: rgba(124,92,255,0.6);
+    box-shadow: 0 0 0 1px rgba(124,92,255,0.3), 0 4px 14px rgba(124,92,255,0.15);
+  }
+  .recent-main {
+    flex: 1; min-width: 0;
+    display: flex; align-items: center; gap: 10px;
+    background: transparent; border: none;
+    color: var(--text); font-size: 12px; font-weight: 600;
+    cursor: pointer; text-align: left; padding: 5px 6px; border-radius: 7px;
+  }
+  .recent-main:hover { background: rgba(124,92,255,0.12); }
+  .recent-main .recent-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .recent-main .ti-emoji { font-size: 15px; }
+  .recent-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .recent-act {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--text); border-radius: 7px;
+    padding: 5px 7px; font-size: 12px; cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .recent-act:hover { border-color: rgba(124,92,255,0.5); background: rgba(124,92,255,0.15); }
+  .recent-empty {
+    font-size: 11px; color: var(--text-dim);
+    padding: 14px 8px; line-height: 1.6; text-align: center;
+  }
+
   /* ---------- Download MIDI button (sits beside Record) ---------- */
   .tbtn.download-midi {
     background: linear-gradient(135deg, #36e07f, #1fa45a);
@@ -947,6 +1000,11 @@
   <!-- Control Panel -->
   <div class="panel" id="panel">
     <h3>Tracks</h3>
+    <div class="tracks-tabs">
+      <button class="tracks-tab active" id="tabBuiltIn" type="button">🎵 Built-in</button>
+      <button class="tracks-tab" id="tabRecent" type="button">🕐 Recent</button>
+    </div>
+    <div id="panelBuiltIn">
     <div class="tracks-wrap">
       <button class="tracks-btn" id="tracksBtn" type="button">
         <span>🎵  Built-in Songs</span>
@@ -980,6 +1038,12 @@
           <span class="ti-meta">Beethoven</span>
         </button>
       </div>
+    </div>
+    </div>
+
+    <div id="panelRecent" style="display:none;">
+      <div class="recent-list" id="recentList"></div>
+      <div class="recent-empty" id="recentEmpty">No recent songs yet.<br>Upload a .mid file and it will stay here — even after you close the browser.</div>
     </div>
 
     <h3 style="margin-top:10px;">Mode</h3>
@@ -1221,6 +1285,179 @@ function base64ToArrayBuffer(b64) {
   const buf = new Uint8Array(len);
   for (let i = 0; i < len; i++) buf[i] = bin.charCodeAt(i);
   return buf.buffer;
+}
+
+// Encode ArrayBuffer → base64 (chunked to avoid call-stack limits on big MIDIs).
+function arrayBufferToBase64(buf) {
+  const bytes = new Uint8Array(buf);
+  let bin = '';
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(bin);
+}
+
+// ---------- Recent Songs store (persists uploaded MIDIs in localStorage) ----------
+const RECENT_SONGS_KEY = 'neokeys.recentSongs.v1';
+const RECENT_SONGS_MAX = 24;
+
+function loadRecentSongs() {
+  try {
+    const raw = localStorage.getItem(RECENT_SONGS_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function persistRecentSongs(list) {
+  localStorage.setItem(RECENT_SONGS_KEY, JSON.stringify(list));
+}
+
+// Saves an uploaded MIDI into Recent Songs. Returns the new entry id, or null
+// if storage is unavailable/full (playback still works — just not persisted).
+function saveRecentSong(name, buf) {
+  try {
+    const entry = {
+      id: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      name: name,
+      b64: arrayBufferToBase64(buf),
+      size: buf.byteLength,
+      addedAt: Date.now(),
+    };
+    const list = loadRecentSongs();
+    list.unshift(entry);
+    while (list.length > RECENT_SONGS_MAX) list.pop();
+    while (true) {
+      try {
+        persistRecentSongs(list);
+        renderRecentSongs();
+        showToast('🕐  Saved to Recent Songs', 'ok');
+        return entry.id;
+      } catch (e) {
+        // Quota exceeded — evict the oldest entry and retry.
+        if (list.length > 1) { list.pop(); continue; }
+        showToast('Storage full — song not kept in Recent Songs', 'err');
+        return null;
+      }
+    }
+  } catch (e) {
+    console.warn('Could not save recent song:', e);
+    return null;
+  }
+}
+
+function formatBytes(n) {
+  if (!n && n !== 0) return '';
+  if (n < 1024) return n + ' B';
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+  return (n / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function updateRecentSongsActive() {
+  const listEl = document.getElementById('recentList');
+  if (!listEl) return;
+  listEl.querySelectorAll('.recent-item').forEach(it => {
+    it.classList.toggle('active', ('recent:' + it.dataset.recentId) === state.currentTrackId);
+  });
+}
+
+function renderRecentSongs() {
+  const listEl  = document.getElementById('recentList');
+  const emptyEl = document.getElementById('recentEmpty');
+  if (!listEl) return;
+  const list = loadRecentSongs();
+  listEl.innerHTML = '';
+  if (emptyEl) emptyEl.style.display = list.length ? 'none' : 'block';
+  for (const s of list) {
+    const row = document.createElement('div');
+    row.className = 'recent-item';
+    row.dataset.recentId = s.id;
+
+    const main = document.createElement('button');
+    main.type = 'button';
+    main.className = 'recent-main';
+    main.title = 'Play';
+    main.innerHTML = '<span class="ti-emoji">🕐</span><span class="recent-name"></span><span class="ti-meta"></span>';
+    main.querySelector('.recent-name').textContent = s.name;
+    main.querySelector('.ti-meta').textContent = formatBytes(s.size);
+    main.addEventListener('click', () => loadRecentSong(s.id, false));
+
+    const actions = document.createElement('div');
+    actions.className = 'recent-actions';
+    const mk = (label, title, fn) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'recent-act';
+      b.textContent = label;
+      b.title = title;
+      b.addEventListener('click', (e) => { e.stopPropagation(); fn(); });
+      return b;
+    };
+    actions.appendChild(mk('🎹', 'Practice', () => loadRecentSong(s.id, true)));
+    actions.appendChild(mk('✏️', 'Rename', () => renameRecentSong(s.id)));
+    actions.appendChild(mk('🗑', 'Delete', () => deleteRecentSong(s.id)));
+
+    row.appendChild(main);
+    row.appendChild(actions);
+    listEl.appendChild(row);
+  }
+  updateRecentSongsActive();
+}
+
+async function loadRecentSong(id, practice) {
+  const s = loadRecentSongs().find(x => x.id === id);
+  if (!s) {
+    showToast('Song not found in Recent Songs', 'err');
+    renderRecentSongs();
+    return;
+  }
+  try {
+    await initAudio();      // boot audio if the tab is clicked before Start
+    const buf  = base64ToArrayBuffer(s.b64);
+    const midi = new Midi(buf);
+    state.currentTrackId    = 'recent:' + id;
+    state.currentTrackTitle = s.name;
+    fileNameEl.textContent  = s.name;
+    loadMidiObject(midi);
+    if (practice) setMode('practice');
+    updateTracksMenuActive();
+    updateDownloadButtonVisibility();
+    showToast('🕐  Loaded: ' + s.name, 'ok');
+  } catch (err) {
+    console.error('Failed to load recent song:', err);
+    showToast('Failed to load song: ' + err.message, 'err');
+  }
+}
+
+function renameRecentSong(id) {
+  const list = loadRecentSongs();
+  const s = list.find(x => x.id === id);
+  if (!s) return;
+  const input = prompt('Rename song:', s.name);
+  if (input === null) return;
+  const name = input.trim();
+  if (!name || name === s.name) return;
+  s.name = name;
+  try { persistRecentSongs(list); } catch (e) { showToast('Could not save rename', 'err'); return; }
+  if (state.currentTrackId === 'recent:' + id) {
+    state.currentTrackTitle = name;
+    fileNameEl.textContent  = name;
+  }
+  renderRecentSongs();
+  showToast('Renamed to: ' + name, 'ok');
+}
+
+function deleteRecentSong(id) {
+  const list = loadRecentSongs();
+  const s = list.find(x => x.id === id);
+  if (!s) return;
+  if (!confirm('Delete "' + s.name + '" from Recent Songs?')) return;
+  try { persistRecentSongs(list.filter(x => x.id !== id)); } catch (e) {}
+  renderRecentSongs();
+  showToast('Deleted: ' + s.name, 'ok');
 }
 
 // ---------- Canvas setup ----------
@@ -1945,7 +2182,8 @@ fileInput.addEventListener('change', async (e) => {
     const buf = await f.arrayBuffer();
     // @tonejs/midi exposes `Midi` global via UMD
     const midi = new Midi(buf);
-    state.currentTrackId    = 'upload';
+    const savedId = saveRecentSong(f.name, buf);
+    state.currentTrackId    = savedId ? ('recent:' + savedId) : 'upload';
     state.currentTrackTitle = f.name;
     loadMidiObject(midi);
     updateTracksMenuActive();
@@ -2844,6 +3082,7 @@ function updateTracksMenuActive() {
   tracksMenu.querySelectorAll('.track-item').forEach(it => {
     it.classList.toggle('active', it.dataset.trackId === state.currentTrackId);
   });
+  updateRecentSongsActive();
 }
 
 if (tracksBtn && tracksMenu) {
@@ -2868,6 +3107,26 @@ if (tracksBtn && tracksMenu) {
     });
   });
 }
+
+// ---------- Tracks tabs (Built-in / Recent) wiring ----------
+const tabBuiltIn   = document.getElementById('tabBuiltIn');
+const tabRecent    = document.getElementById('tabRecent');
+const panelBuiltIn = document.getElementById('panelBuiltIn');
+const panelRecent  = document.getElementById('panelRecent');
+
+function setTracksTab(which) {
+  const recent = which === 'recent';
+  if (tabBuiltIn)   tabBuiltIn.classList.toggle('active', !recent);
+  if (tabRecent)    tabRecent.classList.toggle('active', recent);
+  if (panelBuiltIn) panelBuiltIn.style.display = recent ? 'none' : '';
+  if (panelRecent)  panelRecent.style.display  = recent ? '' : 'none';
+  if (recent) renderRecentSongs();
+}
+if (tabBuiltIn) tabBuiltIn.addEventListener('click', () => setTracksTab('builtin'));
+if (tabRecent)  tabRecent.addEventListener('click', () => setTracksTab('recent'));
+
+// Initial paint so the Recent tab is correct the moment the app boots.
+renderRecentSongs();
 
 // ---------- Notation toggle wiring (Update 4) ----------
 const notationEnglishBtn  = document.getElementById('notationEnglish');
@@ -3616,5 +3875,6 @@ document.addEventListener('visibilitychange', () => {
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79"}' crossorigin="anonymous"></script>
 </body>
 </html>
